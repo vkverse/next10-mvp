@@ -52,17 +52,17 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#070811] text-white">
+    <main className="min-h-screen overflow-hidden bg-[#07130d] text-white">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-[-18rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full bg-violet-600/25 blur-3xl" />
-        <div className="absolute right-[-16rem] top-24 h-[30rem] w-[30rem] rounded-full bg-cyan-400/15 blur-3xl" />
-        <div className="absolute bottom-[-18rem] left-1/3 h-[34rem] w-[34rem] rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute left-[-18rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full bg-emerald-700/22 blur-3xl" />
+        <div className="absolute right-[-16rem] top-24 h-[30rem] w-[30rem] rounded-full bg-lime-300/14 blur-3xl" />
+        <div className="absolute bottom-[-18rem] left-1/3 h-[34rem] w-[34rem] rounded-full bg-teal-500/16 blur-3xl" />
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
         <header className="flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.06] px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur-2xl">
           <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-lg font-black">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-lime-400 text-lg font-black text-[#092015]">
               N10
             </div>
             <div>
@@ -77,7 +77,7 @@ export default function Home() {
 
         <section className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-14">
           <div>
-            <div className="mb-7 inline-flex rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-violet-200">
+            <div className="mb-7 inline-flex rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">
               Start with the next 10 minutes
             </div>
 
@@ -110,7 +110,7 @@ export default function Home() {
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.07] p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl">
             {step === "home" && (
               <div className="space-y-4">
-                <div className="rounded-[1.5rem] bg-gradient-to-br from-violet-500 to-indigo-600 p-6">
+                <div className="rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-lime-500 p-6 text-[#092015]">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
                     Today
                   </p>
@@ -118,7 +118,7 @@ export default function Home() {
                   <input
                     value={identity}
                     onChange={(event) => setIdentity(event.target.value)}
-                    className="mt-3 w-full rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-lg font-semibold outline-none placeholder:text-white/40"
+                    className="mt-3 w-full rounded-2xl border border-white/30 bg-white/25 px-4 py-3 text-lg font-semibold outline-none placeholder:text-[#092015]/45"
                   />
                 </div>
 
@@ -148,7 +148,7 @@ export default function Home() {
 
                 <button
                   onClick={() => setStep("trigger")}
-                  className="w-full rounded-[1.6rem] bg-white px-6 py-5 text-lg font-black text-[#111226] shadow-xl shadow-violet-500/20 transition hover:scale-[1.01]"
+                  className="w-full rounded-[1.6rem] bg-lime-200 px-6 py-5 text-lg font-black text-[#092015] shadow-xl shadow-emerald-500/20 transition hover:scale-[1.01]"
                 >
                   I&apos;m triggered
                 </button>
@@ -178,7 +178,7 @@ export default function Home() {
                     max="10"
                     value={urge}
                     onChange={(event) => setUrge(Number(event.target.value))}
-                    className="w-full accent-violet-400"
+                    className="w-full accent-emerald-400"
                   />
                 </Panel>
                 <Panel title="Trigger">
@@ -196,7 +196,7 @@ export default function Home() {
                 </Panel>
                 <button
                   onClick={() => setStep("reset")}
-                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-violet-500 to-indigo-500 px-6 py-4 font-black"
+                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-emerald-500 to-lime-400 px-6 py-4 font-black text-[#092015]"
                 >
                   Give me a 10-minute reset
                 </button>
@@ -207,7 +207,7 @@ export default function Home() {
               <div className="space-y-4">
                 <ScreenTitle eyebrow="Reset in progress" title="Win this moment, not forever." />
                 <div className="rounded-[1.7rem] border border-white/10 bg-[#0e1020] p-6">
-                  <p className="text-sm uppercase tracking-[0.22em] text-violet-200">
+                  <p className="text-sm uppercase tracking-[0.22em] text-emerald-100">
                     Your action
                   </p>
                   <h3 className="mt-4 text-3xl font-black leading-tight">
@@ -223,7 +223,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={completeReset}
-                  className="w-full rounded-[1.4rem] bg-white px-6 py-4 font-black text-[#111226]"
+                  className="w-full rounded-[1.4rem] bg-lime-200 px-6 py-4 font-black text-[#092015]"
                 >
                   I finished the reset
                 </button>
@@ -240,14 +240,14 @@ export default function Home() {
                     max="10"
                     value={afterUrge}
                     onChange={(event) => setAfterUrge(Number(event.target.value))}
-                    className="w-full accent-cyan-300"
+                    className="w-full accent-lime-300"
                   />
                 </Panel>
                 <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.06] p-5">
                   <p className="text-sm text-white/55">Before</p>
                   <p className="text-4xl font-black">{urge}/10</p>
                   <p className="mt-4 text-sm text-white/55">Now</p>
-                  <p className="text-4xl font-black text-cyan-200">{afterUrge}/10</p>
+                  <p className="text-4xl font-black text-lime-200">{afterUrge}/10</p>
                   <p className="mt-5 text-sm leading-6 text-white/55">
                     One difficult moment does not erase progress. This is data,
                     not judgement.
@@ -255,7 +255,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={saveReflection}
-                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-cyan-300 to-violet-400 px-6 py-4 font-black text-[#111226]"
+                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-lime-300 to-emerald-400 px-6 py-4 font-black text-[#092015]"
                 >
                   Save reflection
                 </button>
@@ -299,7 +299,7 @@ function Choice({
       onClick={onClick}
       className={`rounded-2xl px-3 py-3 text-left text-sm font-semibold transition ${
         active
-          ? "bg-white text-[#111226]"
+          ? "bg-lime-200 text-[#092015]"
           : "border border-white/10 bg-white/[0.04] text-white/62 hover:bg-white/[0.08]"
       }`}
     >
@@ -311,7 +311,7 @@ function Choice({
 function ScreenTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-violet-200">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">
         {eyebrow}
       </p>
       <h2 className="mt-3 text-3xl font-black leading-tight">{title}</h2>
