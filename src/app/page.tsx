@@ -27,6 +27,7 @@ const actions = [
 
 export default function Home() {
   const [step, setStep] = useState<Step>("home");
+  const [userName, setUserName] = useState("Guest");
   const [habit, setHabit] = useState(habits[0]);
   const [identity, setIdentity] = useState("A focused person");
   const [feeling, setFeeling] = useState(feelings[0]);
@@ -75,35 +76,56 @@ export default function Home() {
           </button>
         </header>
 
-        <section className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-14">
-          <div>
-            <div className="mb-7 inline-flex rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">
-              Start with the next 10 minutes
+        <section className="grid flex-1 items-start gap-8 py-8 lg:grid-cols-[0.82fr_1.18fr] lg:py-10">
+          <div className="space-y-5 lg:sticky lg:top-6">
+            <div className="inline-flex rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">
+              Next 10 minutes
             </div>
 
-            <h1 className="max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-white sm:text-6xl lg:text-7xl">
-              Interrupt the moment where the habit usually wins.
+            <h1 className="max-w-xl text-4xl font-black leading-[1.02] tracking-normal text-white sm:text-5xl">
+              Feeling an urge?
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/58">
-              A privacy-first habit control MVP for urges, triggers, reset
-              actions, reflection, and identity-based progress without shame.
+            <p className="max-w-md text-base leading-7 text-white/58">
+              Pause. Pick one reset. Check again after 10 minutes.
             </p>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {[
-                ["Urges handled", sessions.toString()],
-                ["Reflections", reflections.toString()],
-                ["Avg urge drop", `-${Math.max(0, urge - afterUrge)}`],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl"
-                >
-                  <p className="text-3xl font-black">{value}</p>
-                  <p className="mt-1 text-sm text-white/45">{label}</p>
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+                Private profile
+              </p>
+              <input
+                value={userName}
+                onChange={(event) => setUserName(event.target.value)}
+                className="mt-3 w-full rounded-2xl border border-white/10 bg-[#0b1f14] px-4 py-3 text-base font-semibold text-white outline-none"
+              />
+              <p className="mt-3 text-sm leading-6 text-white/50">
+                MVP-la this is local profile. Real app-la login add pannina each
+                user-ku separate history, analysis, and progress save pannalam.
+              </p>
+
+              <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                <summary className="cursor-pointer text-sm font-semibold text-white/70">
+                  Private progress
+                </summary>
+                <div className="mt-3 grid gap-2">
+                  {[
+                    ["Urges handled", sessions.toString()],
+                    ["Reflections", reflections.toString()],
+                    ["Avg urge drop", `-${Math.max(0, urge - afterUrge)}`],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2"
+                    >
+                      <span className="text-sm text-white/52">{label}</span>
+                      <span className="text-base font-black text-lime-100">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </details>
             </div>
           </div>
 
@@ -112,7 +134,7 @@ export default function Home() {
               <div className="space-y-4">
                 <div className="rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-lime-500 p-6 text-[#092015]">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
-                    Today
+                    Today for {userName || "Guest"}
                   </p>
                   <h2 className="mt-4 text-3xl font-black">You are becoming</h2>
                   <input
