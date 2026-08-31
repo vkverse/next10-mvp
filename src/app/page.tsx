@@ -1,69 +1,320 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Step = "home" | "trigger" | "reset" | "reflect";
+
+const habits = [
+  "Social media",
+  "Smoking",
+  "Porn",
+  "Gaming",
+  "Junk food",
+  "Spending",
+];
+
+const feelings = ["Bored", "Stressed", "Lonely", "Anxious", "Angry", "Automatic"];
+const triggers = ["Phone", "Being alone", "Late night", "Work pressure", "Social media", "Unknown"];
+
+const actions = [
+  "Take a 10-minute walk without your phone",
+  "Wash your face and drink water slowly",
+  "Do 20 squats, then sit somewhere different",
+  "Play one calming song and breathe with it",
+  "Clean one small area for 10 minutes",
+  "Message someone you trust: 'Distract me for 10 mins'",
+];
 
 export default function Home() {
+  const [step, setStep] = useState<Step>("home");
+  const [habit, setHabit] = useState(habits[0]);
+  const [identity, setIdentity] = useState("A focused person");
+  const [feeling, setFeeling] = useState(feelings[0]);
+  const [trigger, setTrigger] = useState(triggers[0]);
+  const [urge, setUrge] = useState(7);
+  const [afterUrge, setAfterUrge] = useState(4);
+  const [sessions, setSessions] = useState(3);
+  const [reflections, setReflections] = useState(2);
+
+  const suggestedAction = useMemo(() => {
+    const seed = feeling.length + trigger.length + urge;
+    return actions[seed % actions.length];
+  }, [feeling, trigger, urge]);
+
+  function completeReset() {
+    setSessions((count) => count + 1);
+    setStep("reflect");
+  }
+
+  function saveReflection() {
+    setReflections((count) => count + 1);
+    setStep("home");
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <main className="min-h-screen overflow-hidden bg-[#070811] text-white">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute left-[-18rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full bg-violet-600/25 blur-3xl" />
+        <div className="absolute right-[-16rem] top-24 h-[30rem] w-[30rem] rounded-full bg-cyan-400/15 blur-3xl" />
+        <div className="absolute bottom-[-18rem] left-1/3 h-[34rem] w-[34rem] rounded-full bg-indigo-500/20 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
+        <header className="flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.06] px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur-2xl">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-lg font-black">
+              N10
+            </div>
+            <div>
+              <p className="text-base font-semibold tracking-tight">Next10</p>
+              <p className="text-xs uppercase tracking-[0.28em] text-white/45">Private reset coach</p>
+            </div>
+          </div>
+          <button className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white/80">
+            App locked
+          </button>
+        </header>
+
+        <section className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-14">
+          <div>
+            <div className="mb-7 inline-flex rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-violet-200">
+              Start with the next 10 minutes
+            </div>
+
+            <h1 className="max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-white sm:text-6xl lg:text-7xl">
+              Interrupt the moment where the habit usually wins.
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/58">
+              A privacy-first habit control MVP for urges, triggers, reset
+              actions, reflection, and identity-based progress without shame.
+            </p>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              {[
+                ["Urges handled", sessions.toString()],
+                ["Reflections", reflections.toString()],
+                ["Avg urge drop", `-${Math.max(0, urge - afterUrge)}`],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl"
+                >
+                  <p className="text-3xl font-black">{value}</p>
+                  <p className="mt-1 text-sm text-white/45">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.07] p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl">
+            {step === "home" && (
+              <div className="space-y-4">
+                <div className="rounded-[1.5rem] bg-gradient-to-br from-violet-500 to-indigo-600 p-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
+                    Today
+                  </p>
+                  <h2 className="mt-4 text-3xl font-black">You are becoming</h2>
+                  <input
+                    value={identity}
+                    onChange={(event) => setIdentity(event.target.value)}
+                    className="mt-3 w-full rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-lg font-semibold outline-none placeholder:text-white/40"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Panel title="Habit to control">
+                    <div className="grid grid-cols-2 gap-2">
+                      {habits.map((item) => (
+                        <Choice
+                          key={item}
+                          active={habit === item}
+                          onClick={() => setHabit(item)}
+                        >
+                          {item}
+                        </Choice>
+                      ))}
+                    </div>
+                  </Panel>
+
+                  <Panel title="Quick check">
+                    <p className="text-sm leading-6 text-white/55">
+                      Current focus: reduce urges around{" "}
+                      <span className="text-white">{habit}</span>. Your data
+                      stays local in this prototype.
+                    </p>
+                  </Panel>
+                </div>
+
+                <button
+                  onClick={() => setStep("trigger")}
+                  className="w-full rounded-[1.6rem] bg-white px-6 py-5 text-lg font-black text-[#111226] shadow-xl shadow-violet-500/20 transition hover:scale-[1.01]"
+                >
+                  I&apos;m triggered
+                </button>
+              </div>
+            )}
+
+            {step === "trigger" && (
+              <div className="space-y-4">
+                <ScreenTitle eyebrow="Trigger mode" title="What is happening right now?" />
+                <Panel title="Feeling">
+                  <div className="grid grid-cols-2 gap-2">
+                    {feelings.map((item) => (
+                      <Choice
+                        key={item}
+                        active={feeling === item}
+                        onClick={() => setFeeling(item)}
+                      >
+                        {item}
+                      </Choice>
+                    ))}
+                  </div>
+                </Panel>
+                <Panel title={`Urge level: ${urge}/10`}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={urge}
+                    onChange={(event) => setUrge(Number(event.target.value))}
+                    className="w-full accent-violet-400"
+                  />
+                </Panel>
+                <Panel title="Trigger">
+                  <div className="grid grid-cols-2 gap-2">
+                    {triggers.map((item) => (
+                      <Choice
+                        key={item}
+                        active={trigger === item}
+                        onClick={() => setTrigger(item)}
+                      >
+                        {item}
+                      </Choice>
+                    ))}
+                  </div>
+                </Panel>
+                <button
+                  onClick={() => setStep("reset")}
+                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-violet-500 to-indigo-500 px-6 py-4 font-black"
+                >
+                  Give me a 10-minute reset
+                </button>
+              </div>
+            )}
+
+            {step === "reset" && (
+              <div className="space-y-4">
+                <ScreenTitle eyebrow="Reset in progress" title="Win this moment, not forever." />
+                <div className="rounded-[1.7rem] border border-white/10 bg-[#0e1020] p-6">
+                  <p className="text-sm uppercase tracking-[0.22em] text-violet-200">
+                    Your action
+                  </p>
+                  <h3 className="mt-4 text-3xl font-black leading-tight">
+                    {suggestedAction}
+                  </h3>
+                  <div className="mt-6 grid h-44 place-items-center rounded-[1.5rem] bg-white/[0.06]">
+                    <p className="text-6xl font-black tracking-tight">10:00</p>
+                  </div>
+                  <p className="mt-5 text-sm leading-6 text-white/55">
+                    Your brain is asking for relief. Give it a safer replacement
+                    first, then decide from a calmer place.
+                  </p>
+                </div>
+                <button
+                  onClick={completeReset}
+                  className="w-full rounded-[1.4rem] bg-white px-6 py-4 font-black text-[#111226]"
+                >
+                  I finished the reset
+                </button>
+              </div>
+            )}
+
+            {step === "reflect" && (
+              <div className="space-y-4">
+                <ScreenTitle eyebrow="Reflection" title="Did the urge change?" />
+                <Panel title={`After reset: ${afterUrge}/10`}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={afterUrge}
+                    onChange={(event) => setAfterUrge(Number(event.target.value))}
+                    className="w-full accent-cyan-300"
+                  />
+                </Panel>
+                <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.06] p-5">
+                  <p className="text-sm text-white/55">Before</p>
+                  <p className="text-4xl font-black">{urge}/10</p>
+                  <p className="mt-4 text-sm text-white/55">Now</p>
+                  <p className="text-4xl font-black text-cyan-200">{afterUrge}/10</p>
+                  <p className="mt-5 text-sm leading-6 text-white/55">
+                    One difficult moment does not erase progress. This is data,
+                    not judgement.
+                  </p>
+                </div>
+                <button
+                  onClick={saveReflection}
+                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-cyan-300 to-violet-400 px-6 py-4 font-black text-[#111226]"
+                >
+                  Save reflection
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function Panel({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+        {title}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function Choice({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-2xl px-3 py-3 text-left text-sm font-semibold transition ${
+        active
+          ? "bg-white text-[#111226]"
+          : "border border-white/10 bg-white/[0.04] text-white/62 hover:bg-white/[0.08]"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ScreenTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-violet-200">
+        {eyebrow}
+      </p>
+      <h2 className="mt-3 text-3xl font-black leading-tight">{title}</h2>
     </div>
   );
 }
