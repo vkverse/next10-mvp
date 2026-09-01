@@ -2,44 +2,34 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-type Screen = "today" | "check" | "timer" | "reflect" | "activity" | "profile";
+type Screen = "home" | "reset" | "timer" | "reflect" | "activity" | "profile";
 
 type Activity = {
   id: number;
   title: string;
-  note: string;
-  result: string;
+  subtitle: string;
+  value: string;
 };
 
-const habits = ["Social media", "Smoking", "Porn", "Gaming", "Junk food", "Spending"];
-const feelings = ["Bored", "Stressed", "Lonely", "Anxious", "Angry", "Automatic"];
-const triggers = ["Phone", "Being alone", "Late night", "Work", "Social media", "Unknown"];
-const resetActions = [
-  "Go for a slow walk",
-  "Drink water and wash your face",
-  "Move to another room",
-  "Play one calm song",
-  "Clean one small space",
-  "Message a trusted person",
+const habits = ["Phone", "Smoking", "Porn", "Gaming", "Junk food", "Spending"];
+const feelings = ["Bored", "Stress", "Alone", "Anxious", "Angry", "Habit"];
+const triggers = ["Social media", "Late night", "Being alone", "Work", "Location", "Unknown"];
+const resetIdeas = [
+  "Go for a walk",
+  "Drink water slowly",
+  "Move rooms",
+  "Play calm music",
+  "Clean one area",
+  "Text a friend",
 ];
-
-const days = [
-  ["Mon", "30"],
-  ["Tue", "01"],
-  ["Wed", "02"],
-  ["Thu", "03"],
-  ["Fri", "04"],
-  ["Sat", "05"],
-];
-
 const timerLength = 10 * 60;
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>("today");
+  const [screen, setScreen] = useState<Screen>("home");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [userName, setUserName] = useState("Vicky");
+  const [name, setName] = useState("Marcus");
   const [habit, setHabit] = useState(habits[0]);
-  const [identity, setIdentity] = useState("A calmer person");
+  const [identity, setIdentity] = useState("Stay calm today");
   const [feeling, setFeeling] = useState(feelings[0]);
   const [trigger, setTrigger] = useState(triggers[0]);
   const [urge, setUrge] = useState(7);
@@ -49,26 +39,21 @@ export default function Home() {
   const [activities, setActivities] = useState<Activity[]>([
     {
       id: 1,
-      title: "Reset completed",
-      note: "Late night phone urge",
-      result: "8 to 5",
+      title: "Daily reset",
+      subtitle: "Late night phone urge",
+      value: "8 to 5",
     },
     {
       id: 2,
-      title: "Daily note",
-      note: "Boredom was the main trigger",
-      result: "Saved",
+      title: "Reflection",
+      subtitle: "Boredom was the trigger",
+      value: "Saved",
     },
   ]);
 
-  const resetAction = useMemo(() => {
-    const seed = feeling.length + trigger.length + urge;
-    return resetActions[seed % resetActions.length];
+  const resetIdea = useMemo(() => {
+    return resetIdeas[(feeling.length + trigger.length + urge) % resetIdeas.length];
   }, [feeling, trigger, urge]);
-
-  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
-  const seconds = (timeLeft % 60).toString().padStart(2, "0");
-  const progress = 1 - timeLeft / timerLength;
 
   useEffect(() => {
     if (!timerRunning || timeLeft <= 0) return;
@@ -87,6 +72,11 @@ export default function Home() {
     return () => window.clearInterval(timerId);
   }, [timerRunning, timeLeft]);
 
+  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+  const seconds = (timeLeft % 60).toString().padStart(2, "0");
+  const timerProgress = 1 - timeLeft / timerLength;
+  const resetCount = activities.filter((item) => item.title.includes("reset")).length + 3;
+
   function go(nextScreen: Screen) {
     setMenuOpen(false);
     setScreen(nextScreen);
@@ -98,13 +88,18 @@ export default function Home() {
     go("timer");
   }
 
+  function finishTimer() {
+    setTimerRunning(false);
+    go("reflect");
+  }
+
   function saveReflection() {
     setActivities((items) => [
       {
         id: Date.now(),
-        title: "Reset completed",
-        note: `${habit}, ${feeling.toLowerCase()}, ${trigger.toLowerCase()}`,
-        result: `${urge} to ${afterUrge}`,
+        title: "Daily reset",
+        subtitle: `${habit}, ${feeling.toLowerCase()}, ${trigger.toLowerCase()}`,
+        value: `${urge} to ${afterUrge}`,
       },
       ...items,
     ]);
@@ -112,126 +107,114 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#dff1df] px-3 py-4 text-[#172317] sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[420px] flex-col overflow-hidden rounded-[2.4rem] border border-white/80 bg-[#fbfbef] shadow-2xl shadow-emerald-900/20">
-        <header className="relative z-30 px-5 pb-3 pt-4">
+    <main className="min-h-screen bg-[#fffdf3] text-[#1f2b1d]">
+      <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col overflow-hidden bg-[#fffdf3]">
+        <header className="relative z-20 px-5 pb-2 pt-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => go("today")} className="text-left">
-              <p className="text-xs font-bold text-[#74806e]">Good morning,</p>
-              <p className="text-2xl font-black tracking-normal">{userName}</p>
+            <button onClick={() => go("home")} className="text-left">
+              <p className="text-[11px] font-bold text-[#7e8978]">Hello,</p>
+              <p className="text-xl font-black leading-none">{name}</p>
             </button>
 
             <div className="relative">
               <button
-                onClick={() => setMenuOpen((open) => !open)}
-                className="grid h-11 w-11 place-items-center rounded-full bg-[#1d261d] text-sm font-black text-[#f4ffd5]"
                 aria-label="Open profile menu"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="grid h-10 w-10 place-items-center rounded-full bg-[#2b3328] text-sm font-black text-[#f6ffd9]"
               >
-                {userName.slice(0, 1).toUpperCase() || "G"}
+                {name.slice(0, 1).toUpperCase() || "G"}
               </button>
-
               {menuOpen && (
-                <div className="absolute right-0 top-13 w-52 rounded-3xl border border-[#d8decf] bg-white p-2 shadow-xl shadow-emerald-900/15">
-                  <MenuItem onClick={() => go("profile")}>Profile</MenuItem>
-                  <MenuItem onClick={() => go("activity")}>Activity</MenuItem>
-                  <MenuItem onClick={() => go("today")}>Today</MenuItem>
-                  <MenuItem onClick={() => go("profile")}>Privacy lock</MenuItem>
+                <div className="absolute right-0 top-12 w-48 rounded-3xl border border-[#e5eadb] bg-white p-2 shadow-xl shadow-emerald-900/10">
+                  <MenuButton onClick={() => go("profile")}>Profile</MenuButton>
+                  <MenuButton onClick={() => go("activity")}>Activity</MenuButton>
+                  <MenuButton onClick={() => go("home")}>Home</MenuButton>
+                  <MenuButton onClick={() => go("profile")}>Privacy lock</MenuButton>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-6 gap-2">
-            {days.map(([day, date], index) => (
+          <div className="mt-4 grid grid-cols-7 gap-1.5">
+            {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
               <div
-                key={date}
-                className={`rounded-2xl px-1 py-2 text-center ${
-                  index === 1 ? "bg-[#1d261d] text-white" : "bg-white text-[#7b8274]"
+                key={`${day}-${index}`}
+                className={`rounded-full py-2 text-center text-[11px] font-black ${
+                  index === 1 ? "bg-[#2b3328] text-white" : "bg-[#f2f3e9] text-[#9aa291]"
                 }`}
               >
-                <p className="text-[10px] font-bold">{day}</p>
-                <p className="mt-1 text-sm font-black">{date}</p>
+                {day}
               </div>
             ))}
           </div>
         </header>
 
-        <section className="flex-1 overflow-y-auto px-5 pb-28 pt-2">
-          {screen === "today" && (
-            <div>
-              <HeroResetCard onStart={() => go("check")} />
+        <section className="flex-1 overflow-y-auto px-5 pb-24 pt-3">
+          {screen === "home" && (
+            <>
+              <div className="rounded-[1.8rem] bg-[#b9e7ca] px-5 py-5 text-center">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#477450]">
+                  One day at a time
+                </p>
+                <ProgressCircle value={0.68}>
+                  <p className="text-5xl font-black leading-none">4</p>
+                  <p className="mt-1 text-sm font-black uppercase">Days</p>
+                </ProgressCircle>
+                <p className="mt-3 text-sm font-bold text-[#477450]">
+                  Focus: {habit}
+                </p>
+              </div>
 
-              <SoftCard className="mt-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
-                      Habit focus
-                    </p>
-                    <p className="mt-1 text-xl font-black">{habit}</p>
-                  </div>
-                  <button
-                    onClick={() => go("check")}
-                    className="rounded-full bg-[#c9f45f] px-4 py-2 text-sm font-black"
-                  >
-                    Reset
-                  </button>
-                </div>
+              <div className="mt-4 space-y-3">
+                <ListCard
+                  title="Daily inventory"
+                  subtitle={identity}
+                  action="Open"
+                  onClick={() => go("activity")}
+                />
+                <ListCard
+                  title="Chance of relapse"
+                  subtitle="Lower when you journal or reset"
+                  action={`${Math.max(20, urge * 7)}%`}
+                  onClick={() => go("reset")}
+                />
+              </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-4 rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+                  Habit focus
+                </p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
                   {habits.map((item) => (
-                    <Choice
-                      key={item}
-                      active={habit === item}
-                      onClick={() => setHabit(item)}
-                    >
+                    <Chip key={item} active={habit === item} onClick={() => setHabit(item)}>
                       {item}
-                    </Choice>
+                    </Chip>
                   ))}
                 </div>
-              </SoftCard>
-
-              <SoftCard className="mt-4 bg-[#f7df8d]">
-                <div className="flex items-center gap-4">
-                  <Companion />
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#77672a]">
-                      Identity
-                    </p>
-                    <input
-                      value={identity}
-                      onChange={(event) => setIdentity(event.target.value)}
-                      className="mt-1 w-full bg-transparent text-xl font-black outline-none"
-                    />
-                  </div>
-                </div>
-              </SoftCard>
+              </div>
 
               <button
-                onClick={() => go("activity")}
-                className="mt-4 w-full rounded-[1.6rem] bg-white px-5 py-4 text-left text-sm font-bold text-[#67715f] shadow-sm"
+                onClick={() => go("reset")}
+                className="mt-4 w-full rounded-[1.6rem] bg-[#2b3328] py-4 text-sm font-black uppercase tracking-[0.08em] text-[#f6ffd9]"
               >
-                View private activity
+                I am triggered
               </button>
-            </div>
+            </>
           )}
 
-          {screen === "check" && (
-            <ScreenPanel title="What do you feel?" eyebrow="Trigger check">
-              <Picker title="Feeling">
+          {screen === "reset" && (
+            <Screen title="Quick reset" subtitle="Answer only what you can.">
+              <Question title="Feeling">
                 {feelings.map((item) => (
-                  <Choice
-                    key={item}
-                    active={feeling === item}
-                    onClick={() => setFeeling(item)}
-                  >
+                  <Chip key={item} active={feeling === item} onClick={() => setFeeling(item)}>
                     {item}
-                  </Choice>
+                  </Chip>
                 ))}
-              </Picker>
+              </Question>
 
-              <SoftCard className="mt-4">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
-                  Urge strength: {urge}/10
+              <div className="mt-3 rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+                  Urge level: {urge}/10
                 </p>
                 <input
                   type="range"
@@ -239,67 +222,45 @@ export default function Home() {
                   max="10"
                   value={urge}
                   onChange={(event) => setUrge(Number(event.target.value))}
-                  className="mt-4 w-full accent-[#4da65a]"
+                  className="mt-4 w-full accent-[#58a968]"
                 />
-              </SoftCard>
+              </div>
 
-              <Picker title="Trigger">
+              <Question title="Trigger">
                 {triggers.map((item) => (
-                  <Choice
-                    key={item}
-                    active={trigger === item}
-                    onClick={() => setTrigger(item)}
-                  >
+                  <Chip key={item} active={trigger === item} onClick={() => setTrigger(item)}>
                     {item}
-                  </Choice>
+                  </Chip>
                 ))}
-              </Picker>
+              </Question>
 
               <button
                 onClick={startTimer}
-                className="mt-5 w-full rounded-[1.6rem] bg-[#1d261d] px-5 py-5 text-base font-black text-[#f4ffd5]"
+                className="mt-4 w-full rounded-[1.6rem] bg-[#92d967] py-4 text-sm font-black uppercase tracking-[0.08em]"
               >
-                Start 10-minute reset
+                Start 10 min
               </button>
-            </ScreenPanel>
+            </Screen>
           )}
 
           {screen === "timer" && (
-            <ScreenPanel title="Go for reset" eyebrow="Timer">
-              <div className="rounded-[2rem] bg-[#bbed7d] p-5 text-center">
-                <button
-                  onClick={() => go("check")}
-                  className="float-right rounded-full bg-white/55 px-3 py-1 text-sm font-black"
-                >
-                  x
-                </button>
-                <Companion large />
-                <h2 className="mt-3 text-2xl font-black">{resetAction}</h2>
-
-                <div
-                  className="mx-auto mt-5 grid h-52 w-52 place-items-center rounded-full shadow-inner"
-                  style={{
-                    background: `conic-gradient(#326b38 ${progress * 360}deg, rgba(255,255,255,0.62) 0deg)`,
-                  }}
-                >
-                  <div className="grid h-40 w-40 place-items-center rounded-full bg-[#fbfbef]">
-                    <p className="text-5xl font-black">
-                      {minutes}:{seconds}
-                    </p>
-                  </div>
-                </div>
+            <Screen title={resetIdea} subtitle="Stay here until the timer ends.">
+              <div className="rounded-[1.8rem] bg-[#c9f49a] p-5 text-center">
+                <Buddy />
+                <ProgressCircle value={timerProgress}>
+                  <p className="text-4xl font-black leading-none">
+                    {minutes}:{seconds}
+                  </p>
+                </ProgressCircle>
+                <p className="mt-2 text-sm font-bold text-[#516b3c]">
+                  Let the urge pass before deciding again.
+                </p>
               </div>
 
-              <SoftCard className="mt-4">
-                <p className="text-sm font-bold text-[#67715f]">
-                  Give this action a real 10 minutes before deciding again.
-                </p>
-              </SoftCard>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setTimerRunning((running) => !running)}
-                  className="rounded-[1.4rem] bg-white px-4 py-4 font-black"
+                  className="rounded-[1.3rem] bg-white py-4 text-sm font-black shadow-sm"
                 >
                   {timerRunning ? "Pause" : "Resume"}
                 </button>
@@ -308,29 +269,26 @@ export default function Home() {
                     setTimeLeft(timerLength);
                     setTimerRunning(true);
                   }}
-                  className="rounded-[1.4rem] bg-white px-4 py-4 font-black"
+                  className="rounded-[1.3rem] bg-white py-4 text-sm font-black shadow-sm"
                 >
                   Restart
                 </button>
               </div>
 
               <button
-                onClick={() => {
-                  setTimerRunning(false);
-                  go("reflect");
-                }}
-                className="mt-3 w-full rounded-[1.6rem] bg-[#1d261d] px-5 py-5 text-base font-black text-[#f4ffd5]"
+                onClick={finishTimer}
+                className="mt-3 w-full rounded-[1.6rem] bg-[#2b3328] py-4 text-sm font-black uppercase tracking-[0.08em] text-[#f6ffd9]"
               >
                 Finish
               </button>
-            </ScreenPanel>
+            </Screen>
           )}
 
           {screen === "reflect" && (
-            <ScreenPanel title="How is it now?" eyebrow="Reflection">
-              <SoftCard>
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
-                  Urge after reset: {afterUrge}/10
+            <Screen title="How is it now?" subtitle="No failure. Just pattern data.">
+              <div className="rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+                  After reset: {afterUrge}/10
                 </p>
                 <input
                   type="range"
@@ -338,87 +296,85 @@ export default function Home() {
                   max="10"
                   value={afterUrge}
                   onChange={(event) => setAfterUrge(Number(event.target.value))}
-                  className="mt-4 w-full accent-[#4da65a]"
+                  className="mt-4 w-full accent-[#58a968]"
                 />
-              </SoftCard>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <ResultCard label="Before" value={`${urge}/10`} />
-                <ResultCard label="Now" value={`${afterUrge}/10`} />
               </div>
 
-              <SoftCard className="mt-4">
-                <p className="text-sm leading-6 text-[#66715f]">
-                  One difficult moment does not erase progress. Save it as a
-                  private pattern, not a failure.
-                </p>
-              </SoftCard>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Mini label="Before" value={`${urge}/10`} />
+                <Mini label="Now" value={`${afterUrge}/10`} />
+              </div>
 
-              <button
+              <ListCard
+                title="Save reflection"
+                subtitle="One hard moment does not erase progress"
+                action="Save"
                 onClick={saveReflection}
-                className="mt-5 w-full rounded-[1.6rem] bg-[#1d261d] px-5 py-5 text-base font-black text-[#f4ffd5]"
-              >
-                Save activity
-              </button>
-            </ScreenPanel>
+              />
+            </Screen>
           )}
 
           {screen === "activity" && (
-            <ScreenPanel title="Private activity" eyebrow="History">
+            <Screen title="Activity" subtitle="Private logs for your account.">
               <div className="space-y-3">
-                {activities.map((activity) => (
-                  <SoftCard key={activity.id}>
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-black">{activity.title}</p>
-                        <p className="mt-1 text-sm text-[#7b8274]">
-                          {activity.note}
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-[#dff7a4] px-3 py-1 text-sm font-black">
-                        {activity.result}
-                      </span>
-                    </div>
-                  </SoftCard>
+                {activities.map((item) => (
+                  <ListCard
+                    key={item.id}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    action={item.value}
+                    onClick={() => undefined}
+                  />
                 ))}
               </div>
-            </ScreenPanel>
+            </Screen>
           )}
 
           {screen === "profile" && (
-            <ScreenPanel title="Your space" eyebrow="Profile">
-              <SoftCard>
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+            <Screen title="Profile" subtitle={`${resetCount} private resets saved.`}>
+              <div className="rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
                   Name
                 </p>
                 <input
-                  value={userName}
-                  onChange={(event) => setUserName(event.target.value)}
-                  className="mt-3 w-full rounded-2xl bg-[#f1f3e6] px-4 py-3 font-black outline-none"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="mt-3 w-full rounded-2xl bg-[#f2f3e9] px-4 py-3 text-sm font-black outline-none"
                 />
-              </SoftCard>
+              </div>
 
-              <div className="mt-4 grid gap-3">
+              <div className="mt-3 rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+                  Daily intention
+                </p>
+                <input
+                  value={identity}
+                  onChange={(event) => setIdentity(event.target.value)}
+                  className="mt-3 w-full rounded-2xl bg-[#f2f3e9] px-4 py-3 text-sm font-black outline-none"
+                />
+              </div>
+
+              <div className="mt-3 space-y-3">
                 {["Account", "Privacy lock", "Notifications", "Export data", "Delete data"].map((item) => (
-                  <button
+                  <ListCard
                     key={item}
-                    className="flex items-center justify-between rounded-[1.4rem] bg-white px-4 py-4 text-left font-black shadow-sm"
-                  >
-                    <span>{item}</span>
-                    <span className="text-[#9ca58f]">&gt;</span>
-                  </button>
+                    title={item}
+                    subtitle="Coming in next build"
+                    action="Open"
+                    onClick={() => undefined}
+                  />
                 ))}
               </div>
-            </ScreenPanel>
+            </Screen>
           )}
         </section>
 
-        <footer className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[390px] -translate-x-1/2 rounded-[1.8rem] bg-[#1d261d] p-2 shadow-2xl shadow-emerald-900/25">
+        <footer className="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 border-t border-[#e5eadb] bg-[#fffdf3] px-5 pb-3 pt-2">
           <nav className="grid grid-cols-4 gap-1">
-            <Tab active={screen === "today"} onClick={() => go("today")} label="Home" />
-            <Tab active={["check", "timer", "reflect"].includes(screen)} onClick={() => go("check")} label="Reset" />
-            <Tab active={screen === "activity"} onClick={() => go("activity")} label="Log" />
-            <Tab active={screen === "profile"} onClick={() => go("profile")} label="Profile" />
+            <Tab label="Home" active={screen === "home"} onClick={() => go("home")} />
+            <Tab label="Reset" active={["reset", "timer", "reflect"].includes(screen)} onClick={() => go("reset")} />
+            <Tab label="Log" active={screen === "activity"} onClick={() => go("activity")} />
+            <Tab label="Me" active={screen === "profile"} onClick={() => go("profile")} />
           </nav>
         </footer>
       </div>
@@ -426,76 +382,57 @@ export default function Home() {
   );
 }
 
-function HeroResetCard({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="relative overflow-hidden rounded-[2.2rem] bg-[#1d261d] p-5 text-[#f4ffd5]">
-      <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#c9f45f]/25" />
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c9f45f]">
-        One moment at a time
-      </p>
-      <h1 className="mt-3 max-w-[12rem] text-4xl font-black leading-[0.95]">
-        Need a reset?
-      </h1>
-      <p className="mt-3 max-w-[13rem] text-sm leading-6 text-[#d7e8ce]/75">
-        Start small. Let the urge pass.
-      </p>
-      <button
-        onClick={onStart}
-        className="mt-6 rounded-full bg-[#c9f45f] px-5 py-3 text-sm font-black text-[#172317]"
-      >
-        I am triggered
-      </button>
-      <div className="absolute bottom-5 right-5">
-        <Companion />
-      </div>
-    </div>
-  );
-}
-
-function ScreenPanel({
-  eyebrow,
+function Screen({
   title,
+  subtitle,
   children,
 }: {
-  eyebrow: string;
   title: string;
+  subtitle: string;
   children: ReactNode;
 }) {
   return (
     <div>
-      <p className="text-sm font-black text-[#4f8f54]">{eyebrow}</p>
-      <h1 className="mt-2 text-3xl font-black leading-tight">{title}</h1>
+      <h1 className="text-2xl font-black leading-tight">{title}</h1>
+      <p className="mt-1 text-sm font-medium leading-6 text-[#747f6c]">{subtitle}</p>
       <div className="mt-4">{children}</div>
     </div>
   );
 }
 
-function Picker({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <SoftCard className="mt-4">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
-        {title}
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">{children}</div>
-    </SoftCard>
-  );
-}
-
-function SoftCard({
+function ProgressCircle({
+  value,
   children,
-  className = "",
 }: {
+  value: number;
   children: ReactNode;
-  className?: string;
 }) {
   return (
-    <div className={`rounded-[1.6rem] bg-white p-4 shadow-sm ${className}`}>
-      {children}
+    <div
+      className="mx-auto mt-4 grid h-40 w-40 place-items-center rounded-full p-3 shadow-inner"
+      style={{
+        background: `conic-gradient(#2f8f4b ${value * 360}deg, rgba(255,255,255,0.58) 0deg)`,
+      }}
+    >
+      <div className="grid h-full w-full place-items-center rounded-full bg-[#fffdf3] text-center">
+        <div>{children}</div>
+      </div>
     </div>
   );
 }
 
-function Choice({
+function Question({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="mt-3 rounded-[1.6rem] bg-white p-4 shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+        {title}
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-2">{children}</div>
+    </div>
+  );
+}
+
+function Chip({
   active,
   children,
   onClick,
@@ -507,8 +444,8 @@ function Choice({
   return (
     <button
       onClick={onClick}
-      className={`rounded-2xl px-3 py-3 text-left text-sm font-black transition ${
-        active ? "bg-[#1d261d] text-[#f4ffd5]" : "bg-[#f1f3e6] text-[#66715f]"
+      className={`min-h-10 rounded-full px-3 text-xs font-black ${
+        active ? "bg-[#2b3328] text-[#f6ffd9]" : "bg-[#f2f3e9] text-[#747f6c]"
       }`}
     >
       {children}
@@ -516,13 +453,42 @@ function Choice({
   );
 }
 
-function ResultCard({ label, value }: { label: string; value: string }) {
+function ListCard({
+  title,
+  subtitle,
+  action,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  action: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="rounded-[1.5rem] bg-white p-4 text-center shadow-sm">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+    <button
+      onClick={onClick}
+      className="flex w-full items-center justify-between gap-3 rounded-[1.5rem] bg-white px-4 py-4 text-left shadow-sm"
+    >
+      <span>
+        <span className="block text-sm font-black">{title}</span>
+        <span className="mt-1 block text-xs font-medium leading-5 text-[#7a8472]">
+          {subtitle}
+        </span>
+      </span>
+      <span className="shrink-0 rounded-full bg-[#eef6d8] px-3 py-1 text-xs font-black text-[#4d7646]">
+        {action}
+      </span>
+    </button>
+  );
+}
+
+function Mini({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.4rem] bg-white p-4 text-center shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.12em] text-[#89937f]">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-black">{value}</p>
+      <p className="mt-1 text-2xl font-black">{value}</p>
     </div>
   );
 }
@@ -539,8 +505,8 @@ function Tab({
   return (
     <button
       onClick={onClick}
-      className={`rounded-[1.3rem] px-2 py-3 text-xs font-black ${
-        active ? "bg-[#f4ffd5] text-[#172317]" : "text-[#f4ffd5]/55"
+      className={`rounded-[1.1rem] px-2 py-2 text-[11px] font-black ${
+        active ? "bg-[#2b3328] text-[#f6ffd9]" : "text-[#9aa291]"
       }`}
     >
       {label}
@@ -548,29 +514,25 @@ function Tab({
   );
 }
 
-function MenuItem({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+function MenuButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-2xl px-4 py-3 text-left text-sm font-black text-[#66715f] hover:bg-[#f1f3e6]"
+      className="w-full rounded-2xl px-4 py-3 text-left text-sm font-black text-[#65715f] hover:bg-[#f2f3e9]"
     >
       {children}
     </button>
   );
 }
 
-function Companion({ large = false }: { large?: boolean }) {
+function Buddy() {
   return (
-    <div
-      className={`relative rounded-[36%] bg-[#55b463] shadow-lg shadow-emerald-900/15 ${
-        large ? "mx-auto h-28 w-28" : "h-20 w-20"
-      }`}
-    >
-      <div className="absolute left-[28%] top-[35%] h-2 w-2 rounded-full bg-[#172317]" />
-      <div className="absolute right-[28%] top-[35%] h-2 w-2 rounded-full bg-[#172317]" />
-      <div className="absolute bottom-[28%] left-1/2 h-3 w-6 -translate-x-1/2 rounded-b-full border-b-4 border-[#172317]" />
-      <div className="absolute -right-2 top-5 h-5 w-5 rotate-12 rounded-full bg-[#c9f45f]" />
-      <div className="absolute -left-2 bottom-5 h-5 w-5 -rotate-12 rounded-full bg-[#c9f45f]" />
+    <div className="mx-auto h-20 w-20 rounded-[38%] bg-[#59b96b] shadow-lg shadow-emerald-900/10">
+      <div className="relative h-full w-full">
+        <div className="absolute left-6 top-7 h-2 w-2 rounded-full bg-[#1f2b1d]" />
+        <div className="absolute right-6 top-7 h-2 w-2 rounded-full bg-[#1f2b1d]" />
+        <div className="absolute bottom-6 left-1/2 h-3 w-6 -translate-x-1/2 rounded-b-full border-b-4 border-[#1f2b1d]" />
+      </div>
     </div>
   );
 }
