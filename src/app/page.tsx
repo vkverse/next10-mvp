@@ -1,307 +1,495 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-type Step = "home" | "trigger" | "reset" | "reflect";
+type Screen = "today" | "check" | "timer" | "reflect" | "activity" | "profile";
 
-const habits = [
-  "Social media",
-  "Smoking",
-  "Porn",
-  "Gaming",
-  "Junk food",
-  "Spending",
-];
+type Activity = {
+  id: number;
+  title: string;
+  note: string;
+  result: string;
+};
 
+const habits = ["Social media", "Smoking", "Porn", "Gaming", "Junk food", "Spending"];
 const feelings = ["Bored", "Stressed", "Lonely", "Anxious", "Angry", "Automatic"];
-const triggers = ["Phone", "Being alone", "Late night", "Work pressure", "Social media", "Unknown"];
-
-const actions = [
-  "Take a 10-minute walk without your phone",
-  "Wash your face and drink water slowly",
-  "Do 20 squats, then sit somewhere different",
-  "Play one calming song and breathe with it",
-  "Clean one small area for 10 minutes",
-  "Message someone you trust: 'Distract me for 10 mins'",
+const triggers = ["Phone", "Being alone", "Late night", "Work", "Social media", "Unknown"];
+const resetActions = [
+  "Go for a slow walk",
+  "Drink water and wash your face",
+  "Move to another room",
+  "Play one calm song",
+  "Clean one small space",
+  "Message a trusted person",
 ];
+
+const days = [
+  ["Mon", "30"],
+  ["Tue", "01"],
+  ["Wed", "02"],
+  ["Thu", "03"],
+  ["Fri", "04"],
+  ["Sat", "05"],
+];
+
+const timerLength = 10 * 60;
 
 export default function Home() {
-  const [step, setStep] = useState<Step>("home");
-  const [userName, setUserName] = useState("Guest");
+  const [screen, setScreen] = useState<Screen>("today");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [userName, setUserName] = useState("Vicky");
   const [habit, setHabit] = useState(habits[0]);
-  const [identity, setIdentity] = useState("A focused person");
+  const [identity, setIdentity] = useState("A calmer person");
   const [feeling, setFeeling] = useState(feelings[0]);
   const [trigger, setTrigger] = useState(triggers[0]);
   const [urge, setUrge] = useState(7);
   const [afterUrge, setAfterUrge] = useState(4);
-  const [sessions, setSessions] = useState(3);
-  const [reflections, setReflections] = useState(2);
+  const [timeLeft, setTimeLeft] = useState(timerLength);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [activities, setActivities] = useState<Activity[]>([
+    {
+      id: 1,
+      title: "Reset completed",
+      note: "Late night phone urge",
+      result: "8 to 5",
+    },
+    {
+      id: 2,
+      title: "Daily note",
+      note: "Boredom was the main trigger",
+      result: "Saved",
+    },
+  ]);
 
-  const suggestedAction = useMemo(() => {
+  const resetAction = useMemo(() => {
     const seed = feeling.length + trigger.length + urge;
-    return actions[seed % actions.length];
+    return resetActions[seed % resetActions.length];
   }, [feeling, trigger, urge]);
 
-  function completeReset() {
-    setSessions((count) => count + 1);
-    setStep("reflect");
+  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+  const seconds = (timeLeft % 60).toString().padStart(2, "0");
+  const progress = 1 - timeLeft / timerLength;
+
+  useEffect(() => {
+    if (!timerRunning || timeLeft <= 0) return;
+
+    const timerId = window.setInterval(() => {
+      setTimeLeft((current) => {
+        if (current <= 1) {
+          setTimerRunning(false);
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [timerRunning, timeLeft]);
+
+  function go(nextScreen: Screen) {
+    setMenuOpen(false);
+    setScreen(nextScreen);
+  }
+
+  function startTimer() {
+    setTimeLeft(timerLength);
+    setTimerRunning(true);
+    go("timer");
   }
 
   function saveReflection() {
-    setReflections((count) => count + 1);
-    setStep("home");
+    setActivities((items) => [
+      {
+        id: Date.now(),
+        title: "Reset completed",
+        note: `${habit}, ${feeling.toLowerCase()}, ${trigger.toLowerCase()}`,
+        result: `${urge} to ${afterUrge}`,
+      },
+      ...items,
+    ]);
+    go("activity");
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#07130d] text-white">
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-[-18rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full bg-emerald-700/22 blur-3xl" />
-        <div className="absolute right-[-16rem] top-24 h-[30rem] w-[30rem] rounded-full bg-lime-300/14 blur-3xl" />
-        <div className="absolute bottom-[-18rem] left-1/3 h-[34rem] w-[34rem] rounded-full bg-teal-500/16 blur-3xl" />
-      </div>
+    <main className="min-h-screen bg-[#dff1df] px-3 py-4 text-[#172317] sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[420px] flex-col overflow-hidden rounded-[2.4rem] border border-white/80 bg-[#fbfbef] shadow-2xl shadow-emerald-900/20">
+        <header className="relative z-30 px-5 pb-3 pt-4">
+          <div className="flex items-center justify-between">
+            <button onClick={() => go("today")} className="text-left">
+              <p className="text-xs font-bold text-[#74806e]">Good morning,</p>
+              <p className="text-2xl font-black tracking-normal">{userName}</p>
+            </button>
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-10">
-        <header className="flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.06] px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur-2xl">
-          <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-lime-400 text-lg font-black text-[#092015]">
-              N10
-            </div>
-            <div>
-              <p className="text-base font-semibold tracking-tight">Next10</p>
-              <p className="text-xs uppercase tracking-[0.28em] text-white/45">Private reset coach</p>
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((open) => !open)}
+                className="grid h-11 w-11 place-items-center rounded-full bg-[#1d261d] text-sm font-black text-[#f4ffd5]"
+                aria-label="Open profile menu"
+              >
+                {userName.slice(0, 1).toUpperCase() || "G"}
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-13 w-52 rounded-3xl border border-[#d8decf] bg-white p-2 shadow-xl shadow-emerald-900/15">
+                  <MenuItem onClick={() => go("profile")}>Profile</MenuItem>
+                  <MenuItem onClick={() => go("activity")}>Activity</MenuItem>
+                  <MenuItem onClick={() => go("today")}>Today</MenuItem>
+                  <MenuItem onClick={() => go("profile")}>Privacy lock</MenuItem>
+                </div>
+              )}
             </div>
           </div>
-          <button className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white/80">
-            App locked
-          </button>
+
+          <div className="mt-5 grid grid-cols-6 gap-2">
+            {days.map(([day, date], index) => (
+              <div
+                key={date}
+                className={`rounded-2xl px-1 py-2 text-center ${
+                  index === 1 ? "bg-[#1d261d] text-white" : "bg-white text-[#7b8274]"
+                }`}
+              >
+                <p className="text-[10px] font-bold">{day}</p>
+                <p className="mt-1 text-sm font-black">{date}</p>
+              </div>
+            ))}
+          </div>
         </header>
 
-        <section className="grid flex-1 items-start gap-8 py-8 lg:grid-cols-[0.82fr_1.18fr] lg:py-10">
-          <div className="space-y-5 lg:sticky lg:top-6">
-            <div className="inline-flex rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">
-              Next 10 minutes
-            </div>
+        <section className="flex-1 overflow-y-auto px-5 pb-28 pt-2">
+          {screen === "today" && (
+            <div>
+              <HeroResetCard onStart={() => go("check")} />
 
-            <h1 className="max-w-xl text-4xl font-black leading-[1.02] tracking-normal text-white sm:text-5xl">
-              Feeling an urge?
-            </h1>
+              <SoftCard className="mt-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+                      Habit focus
+                    </p>
+                    <p className="mt-1 text-xl font-black">{habit}</p>
+                  </div>
+                  <button
+                    onClick={() => go("check")}
+                    className="rounded-full bg-[#c9f45f] px-4 py-2 text-sm font-black"
+                  >
+                    Reset
+                  </button>
+                </div>
 
-            <p className="max-w-md text-base leading-7 text-white/58">
-              Pause. Pick one reset. Check again after 10 minutes.
-            </p>
-
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
-                Private profile
-              </p>
-              <input
-                value={userName}
-                onChange={(event) => setUserName(event.target.value)}
-                className="mt-3 w-full rounded-2xl border border-white/10 bg-[#0b1f14] px-4 py-3 text-base font-semibold text-white outline-none"
-              />
-              <p className="mt-3 text-sm leading-6 text-white/50">
-                MVP-la this is local profile. Real app-la login add pannina each
-                user-ku separate history, analysis, and progress save pannalam.
-              </p>
-
-              <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-                <summary className="cursor-pointer text-sm font-semibold text-white/70">
-                  Private progress
-                </summary>
-                <div className="mt-3 grid gap-2">
-                  {[
-                    ["Urges handled", sessions.toString()],
-                    ["Reflections", reflections.toString()],
-                    ["Avg urge drop", `-${Math.max(0, urge - afterUrge)}`],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="flex items-center justify-between rounded-xl bg-white/[0.04] px-3 py-2"
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {habits.map((item) => (
+                    <Choice
+                      key={item}
+                      active={habit === item}
+                      onClick={() => setHabit(item)}
                     >
-                      <span className="text-sm text-white/52">{label}</span>
-                      <span className="text-base font-black text-lime-100">
-                        {value}
-                      </span>
-                    </div>
+                      {item}
+                    </Choice>
                   ))}
                 </div>
-              </details>
-            </div>
-          </div>
+              </SoftCard>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.07] p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl">
-            {step === "home" && (
-              <div className="space-y-4">
-                <div className="rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-lime-500 p-6 text-[#092015]">
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
-                    Today for {userName || "Guest"}
-                  </p>
-                  <h2 className="mt-4 text-3xl font-black">You are becoming</h2>
-                  <input
-                    value={identity}
-                    onChange={(event) => setIdentity(event.target.value)}
-                    className="mt-3 w-full rounded-2xl border border-white/30 bg-white/25 px-4 py-3 text-lg font-semibold outline-none placeholder:text-[#092015]/45"
-                  />
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Panel title="Habit to control">
-                    <div className="grid grid-cols-2 gap-2">
-                      {habits.map((item) => (
-                        <Choice
-                          key={item}
-                          active={habit === item}
-                          onClick={() => setHabit(item)}
-                        >
-                          {item}
-                        </Choice>
-                      ))}
-                    </div>
-                  </Panel>
-
-                  <Panel title="Quick check">
-                    <p className="text-sm leading-6 text-white/55">
-                      Current focus: reduce urges around{" "}
-                      <span className="text-white">{habit}</span>. Your data
-                      stays local in this prototype.
+              <SoftCard className="mt-4 bg-[#f7df8d]">
+                <div className="flex items-center gap-4">
+                  <Companion />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#77672a]">
+                      Identity
                     </p>
-                  </Panel>
-                </div>
-
-                <button
-                  onClick={() => setStep("trigger")}
-                  className="w-full rounded-[1.6rem] bg-lime-200 px-6 py-5 text-lg font-black text-[#092015] shadow-xl shadow-emerald-500/20 transition hover:scale-[1.01]"
-                >
-                  I&apos;m triggered
-                </button>
-              </div>
-            )}
-
-            {step === "trigger" && (
-              <div className="space-y-4">
-                <ScreenTitle eyebrow="Trigger mode" title="What is happening right now?" />
-                <Panel title="Feeling">
-                  <div className="grid grid-cols-2 gap-2">
-                    {feelings.map((item) => (
-                      <Choice
-                        key={item}
-                        active={feeling === item}
-                        onClick={() => setFeeling(item)}
-                      >
-                        {item}
-                      </Choice>
-                    ))}
+                    <input
+                      value={identity}
+                      onChange={(event) => setIdentity(event.target.value)}
+                      className="mt-1 w-full bg-transparent text-xl font-black outline-none"
+                    />
                   </div>
-                </Panel>
-                <Panel title={`Urge level: ${urge}/10`}>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={urge}
-                    onChange={(event) => setUrge(Number(event.target.value))}
-                    className="w-full accent-emerald-400"
-                  />
-                </Panel>
-                <Panel title="Trigger">
-                  <div className="grid grid-cols-2 gap-2">
-                    {triggers.map((item) => (
-                      <Choice
-                        key={item}
-                        active={trigger === item}
-                        onClick={() => setTrigger(item)}
-                      >
-                        {item}
-                      </Choice>
-                    ))}
-                  </div>
-                </Panel>
-                <button
-                  onClick={() => setStep("reset")}
-                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-emerald-500 to-lime-400 px-6 py-4 font-black text-[#092015]"
-                >
-                  Give me a 10-minute reset
-                </button>
-              </div>
-            )}
-
-            {step === "reset" && (
-              <div className="space-y-4">
-                <ScreenTitle eyebrow="Reset in progress" title="Win this moment, not forever." />
-                <div className="rounded-[1.7rem] border border-white/10 bg-[#0e1020] p-6">
-                  <p className="text-sm uppercase tracking-[0.22em] text-emerald-100">
-                    Your action
-                  </p>
-                  <h3 className="mt-4 text-3xl font-black leading-tight">
-                    {suggestedAction}
-                  </h3>
-                  <div className="mt-6 grid h-44 place-items-center rounded-[1.5rem] bg-white/[0.06]">
-                    <p className="text-6xl font-black tracking-tight">10:00</p>
-                  </div>
-                  <p className="mt-5 text-sm leading-6 text-white/55">
-                    Your brain is asking for relief. Give it a safer replacement
-                    first, then decide from a calmer place.
-                  </p>
                 </div>
-                <button
-                  onClick={completeReset}
-                  className="w-full rounded-[1.4rem] bg-lime-200 px-6 py-4 font-black text-[#092015]"
-                >
-                  I finished the reset
-                </button>
-              </div>
-            )}
+              </SoftCard>
 
-            {step === "reflect" && (
-              <div className="space-y-4">
-                <ScreenTitle eyebrow="Reflection" title="Did the urge change?" />
-                <Panel title={`After reset: ${afterUrge}/10`}>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={afterUrge}
-                    onChange={(event) => setAfterUrge(Number(event.target.value))}
-                    className="w-full accent-lime-300"
-                  />
-                </Panel>
-                <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.06] p-5">
-                  <p className="text-sm text-white/55">Before</p>
-                  <p className="text-4xl font-black">{urge}/10</p>
-                  <p className="mt-4 text-sm text-white/55">Now</p>
-                  <p className="text-4xl font-black text-lime-200">{afterUrge}/10</p>
-                  <p className="mt-5 text-sm leading-6 text-white/55">
-                    One difficult moment does not erase progress. This is data,
-                    not judgement.
-                  </p>
-                </div>
+              <button
+                onClick={() => go("activity")}
+                className="mt-4 w-full rounded-[1.6rem] bg-white px-5 py-4 text-left text-sm font-bold text-[#67715f] shadow-sm"
+              >
+                View private activity
+              </button>
+            </div>
+          )}
+
+          {screen === "check" && (
+            <ScreenPanel title="What do you feel?" eyebrow="Trigger check">
+              <Picker title="Feeling">
+                {feelings.map((item) => (
+                  <Choice
+                    key={item}
+                    active={feeling === item}
+                    onClick={() => setFeeling(item)}
+                  >
+                    {item}
+                  </Choice>
+                ))}
+              </Picker>
+
+              <SoftCard className="mt-4">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+                  Urge strength: {urge}/10
+                </p>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={urge}
+                  onChange={(event) => setUrge(Number(event.target.value))}
+                  className="mt-4 w-full accent-[#4da65a]"
+                />
+              </SoftCard>
+
+              <Picker title="Trigger">
+                {triggers.map((item) => (
+                  <Choice
+                    key={item}
+                    active={trigger === item}
+                    onClick={() => setTrigger(item)}
+                  >
+                    {item}
+                  </Choice>
+                ))}
+              </Picker>
+
+              <button
+                onClick={startTimer}
+                className="mt-5 w-full rounded-[1.6rem] bg-[#1d261d] px-5 py-5 text-base font-black text-[#f4ffd5]"
+              >
+                Start 10-minute reset
+              </button>
+            </ScreenPanel>
+          )}
+
+          {screen === "timer" && (
+            <ScreenPanel title="Go for reset" eyebrow="Timer">
+              <div className="rounded-[2rem] bg-[#bbed7d] p-5 text-center">
                 <button
-                  onClick={saveReflection}
-                  className="w-full rounded-[1.4rem] bg-gradient-to-r from-lime-300 to-emerald-400 px-6 py-4 font-black text-[#092015]"
+                  onClick={() => go("check")}
+                  className="float-right rounded-full bg-white/55 px-3 py-1 text-sm font-black"
                 >
-                  Save reflection
+                  x
+                </button>
+                <Companion large />
+                <h2 className="mt-3 text-2xl font-black">{resetAction}</h2>
+
+                <div
+                  className="mx-auto mt-5 grid h-52 w-52 place-items-center rounded-full shadow-inner"
+                  style={{
+                    background: `conic-gradient(#326b38 ${progress * 360}deg, rgba(255,255,255,0.62) 0deg)`,
+                  }}
+                >
+                  <div className="grid h-40 w-40 place-items-center rounded-full bg-[#fbfbef]">
+                    <p className="text-5xl font-black">
+                      {minutes}:{seconds}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <SoftCard className="mt-4">
+                <p className="text-sm font-bold text-[#67715f]">
+                  Give this action a real 10 minutes before deciding again.
+                </p>
+              </SoftCard>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setTimerRunning((running) => !running)}
+                  className="rounded-[1.4rem] bg-white px-4 py-4 font-black"
+                >
+                  {timerRunning ? "Pause" : "Resume"}
+                </button>
+                <button
+                  onClick={() => {
+                    setTimeLeft(timerLength);
+                    setTimerRunning(true);
+                  }}
+                  className="rounded-[1.4rem] bg-white px-4 py-4 font-black"
+                >
+                  Restart
                 </button>
               </div>
-            )}
-          </div>
+
+              <button
+                onClick={() => {
+                  setTimerRunning(false);
+                  go("reflect");
+                }}
+                className="mt-3 w-full rounded-[1.6rem] bg-[#1d261d] px-5 py-5 text-base font-black text-[#f4ffd5]"
+              >
+                Finish
+              </button>
+            </ScreenPanel>
+          )}
+
+          {screen === "reflect" && (
+            <ScreenPanel title="How is it now?" eyebrow="Reflection">
+              <SoftCard>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+                  Urge after reset: {afterUrge}/10
+                </p>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={afterUrge}
+                  onChange={(event) => setAfterUrge(Number(event.target.value))}
+                  className="mt-4 w-full accent-[#4da65a]"
+                />
+              </SoftCard>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <ResultCard label="Before" value={`${urge}/10`} />
+                <ResultCard label="Now" value={`${afterUrge}/10`} />
+              </div>
+
+              <SoftCard className="mt-4">
+                <p className="text-sm leading-6 text-[#66715f]">
+                  One difficult moment does not erase progress. Save it as a
+                  private pattern, not a failure.
+                </p>
+              </SoftCard>
+
+              <button
+                onClick={saveReflection}
+                className="mt-5 w-full rounded-[1.6rem] bg-[#1d261d] px-5 py-5 text-base font-black text-[#f4ffd5]"
+              >
+                Save activity
+              </button>
+            </ScreenPanel>
+          )}
+
+          {screen === "activity" && (
+            <ScreenPanel title="Private activity" eyebrow="History">
+              <div className="space-y-3">
+                {activities.map((activity) => (
+                  <SoftCard key={activity.id}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-black">{activity.title}</p>
+                        <p className="mt-1 text-sm text-[#7b8274]">
+                          {activity.note}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#dff7a4] px-3 py-1 text-sm font-black">
+                        {activity.result}
+                      </span>
+                    </div>
+                  </SoftCard>
+                ))}
+              </div>
+            </ScreenPanel>
+          )}
+
+          {screen === "profile" && (
+            <ScreenPanel title="Your space" eyebrow="Profile">
+              <SoftCard>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+                  Name
+                </p>
+                <input
+                  value={userName}
+                  onChange={(event) => setUserName(event.target.value)}
+                  className="mt-3 w-full rounded-2xl bg-[#f1f3e6] px-4 py-3 font-black outline-none"
+                />
+              </SoftCard>
+
+              <div className="mt-4 grid gap-3">
+                {["Account", "Privacy lock", "Notifications", "Export data", "Delete data"].map((item) => (
+                  <button
+                    key={item}
+                    className="flex items-center justify-between rounded-[1.4rem] bg-white px-4 py-4 text-left font-black shadow-sm"
+                  >
+                    <span>{item}</span>
+                    <span className="text-[#9ca58f]">&gt;</span>
+                  </button>
+                ))}
+              </div>
+            </ScreenPanel>
+          )}
         </section>
+
+        <footer className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[390px] -translate-x-1/2 rounded-[1.8rem] bg-[#1d261d] p-2 shadow-2xl shadow-emerald-900/25">
+          <nav className="grid grid-cols-4 gap-1">
+            <Tab active={screen === "today"} onClick={() => go("today")} label="Home" />
+            <Tab active={["check", "timer", "reflect"].includes(screen)} onClick={() => go("check")} label="Reset" />
+            <Tab active={screen === "activity"} onClick={() => go("activity")} label="Log" />
+            <Tab active={screen === "profile"} onClick={() => go("profile")} label="Profile" />
+          </nav>
+        </footer>
       </div>
     </main>
   );
 }
 
-function Panel({
+function HeroResetCard({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="relative overflow-hidden rounded-[2.2rem] bg-[#1d261d] p-5 text-[#f4ffd5]">
+      <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#c9f45f]/25" />
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#c9f45f]">
+        One moment at a time
+      </p>
+      <h1 className="mt-3 max-w-[12rem] text-4xl font-black leading-[0.95]">
+        Need a reset?
+      </h1>
+      <p className="mt-3 max-w-[13rem] text-sm leading-6 text-[#d7e8ce]/75">
+        Start small. Let the urge pass.
+      </p>
+      <button
+        onClick={onStart}
+        className="mt-6 rounded-full bg-[#c9f45f] px-5 py-3 text-sm font-black text-[#172317]"
+      >
+        I am triggered
+      </button>
+      <div className="absolute bottom-5 right-5">
+        <Companion />
+      </div>
+    </div>
+  );
+}
+
+function ScreenPanel({
+  eyebrow,
   title,
   children,
 }: {
+  eyebrow: string;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+    <div>
+      <p className="text-sm font-black text-[#4f8f54]">{eyebrow}</p>
+      <h1 className="mt-2 text-3xl font-black leading-tight">{title}</h1>
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
+function Picker({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <SoftCard className="mt-4">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
         {title}
       </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">{children}</div>
+    </SoftCard>
+  );
+}
+
+function SoftCard({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`rounded-[1.6rem] bg-white p-4 shadow-sm ${className}`}>
       {children}
     </div>
   );
@@ -313,16 +501,14 @@ function Choice({
   onClick,
 }: {
   active: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-2xl px-3 py-3 text-left text-sm font-semibold transition ${
-        active
-          ? "bg-lime-200 text-[#092015]"
-          : "border border-white/10 bg-white/[0.04] text-white/62 hover:bg-white/[0.08]"
+      className={`rounded-2xl px-3 py-3 text-left text-sm font-black transition ${
+        active ? "bg-[#1d261d] text-[#f4ffd5]" : "bg-[#f1f3e6] text-[#66715f]"
       }`}
     >
       {children}
@@ -330,13 +516,61 @@ function Choice({
   );
 }
 
-function ScreenTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+function ResultCard({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">
-        {eyebrow}
+    <div className="rounded-[1.5rem] bg-white p-4 text-center shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#819075]">
+        {label}
       </p>
-      <h2 className="mt-3 text-3xl font-black leading-tight">{title}</h2>
+      <p className="mt-2 text-3xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function Tab({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-[1.3rem] px-2 py-3 text-xs font-black ${
+        active ? "bg-[#f4ffd5] text-[#172317]" : "text-[#f4ffd5]/55"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function MenuItem({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full rounded-2xl px-4 py-3 text-left text-sm font-black text-[#66715f] hover:bg-[#f1f3e6]"
+    >
+      {children}
+    </button>
+  );
+}
+
+function Companion({ large = false }: { large?: boolean }) {
+  return (
+    <div
+      className={`relative rounded-[36%] bg-[#55b463] shadow-lg shadow-emerald-900/15 ${
+        large ? "mx-auto h-28 w-28" : "h-20 w-20"
+      }`}
+    >
+      <div className="absolute left-[28%] top-[35%] h-2 w-2 rounded-full bg-[#172317]" />
+      <div className="absolute right-[28%] top-[35%] h-2 w-2 rounded-full bg-[#172317]" />
+      <div className="absolute bottom-[28%] left-1/2 h-3 w-6 -translate-x-1/2 rounded-b-full border-b-4 border-[#172317]" />
+      <div className="absolute -right-2 top-5 h-5 w-5 rotate-12 rounded-full bg-[#c9f45f]" />
+      <div className="absolute -left-2 bottom-5 h-5 w-5 -rotate-12 rounded-full bg-[#c9f45f]" />
     </div>
   );
 }
