@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-type Screen = "home" | "reset" | "timer" | "reflect" | "activity" | "profile";
+type Screen =
+  | "home"
+  | "reset"
+  | "timer"
+  | "reflect"
+  | "inventory"
+  | "activity"
+  | "profile";
 
 type Activity = {
   id: number;
@@ -14,6 +21,7 @@ type Activity = {
 const habits = ["Phone", "Smoking", "Porn", "Gaming", "Junk food", "Spending"];
 const feelings = ["Bored", "Stress", "Alone", "Anxious", "Angry", "Habit"];
 const triggers = ["Social media", "Late night", "Being alone", "Work", "Location", "Unknown"];
+const moods = ["Great", "Good", "Okay", "Hard", "Very hard"];
 const resetIdeas = [
   "Go for a walk",
   "Drink water slowly",
@@ -23,33 +31,56 @@ const resetIdeas = [
   "Text a friend",
 ];
 const timerLength = 10 * 60;
+const storageKey = "next10-mvp-state";
+const defaultActivities: Activity[] = [
+  {
+    id: 1,
+    title: "Daily reset",
+    subtitle: "Late night phone urge",
+    value: "8 to 5",
+  },
+  {
+    id: 2,
+    title: "Reflection",
+    subtitle: "Boredom was the trigger",
+    value: "Saved",
+  },
+];
+
+function readStoredValue<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+
+  try {
+    const saved = window.localStorage.getItem(storageKey);
+    if (!saved) return fallback;
+
+    const parsed = JSON.parse(saved) as Record<string, unknown>;
+    return (parsed[key] as T | undefined) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("home");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [name, setName] = useState("Marcus");
-  const [habit, setHabit] = useState(habits[0]);
-  const [identity, setIdentity] = useState("Stay calm today");
+  const [name, setName] = useState(() => readStoredValue("name", "Marcus"));
+  const [habit, setHabit] = useState(() => readStoredValue("habit", habits[0]));
+  const [identity, setIdentity] = useState(() =>
+    readStoredValue("identity", "Stay calm today")
+  );
   const [feeling, setFeeling] = useState(feelings[0]);
   const [trigger, setTrigger] = useState(triggers[0]);
   const [urge, setUrge] = useState(7);
   const [afterUrge, setAfterUrge] = useState(4);
+  const [mood, setMood] = useState(moods[1]);
+  const [dailyUrge, setDailyUrge] = useState(3);
+  const [journal, setJournal] = useState("");
   const [timeLeft, setTimeLeft] = useState(timerLength);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [activities, setActivities] = useState<Activity[]>([
-    {
-      id: 1,
-      title: "Daily reset",
-      subtitle: "Late night phone urge",
-      value: "8 to 5",
-    },
-    {
-      id: 2,
-      title: "Reflection",
-      subtitle: "Boredom was the trigger",
-      value: "Saved",
-    },
-  ]);
+  const [activities, setActivities] = useState<Activity[]>(() =>
+    readStoredValue("activities", defaultActivities)
+  );
 
   const resetIdea = useMemo(() => {
     return resetIdeas[(feeling.length + trigger.length + urge) % resetIdeas.length];
@@ -71,6 +102,18 @@ export default function Home() {
 
     return () => window.clearInterval(timerId);
   }, [timerRunning, timeLeft]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        name,
+        habit,
+        identity,
+        activities,
+      })
+    );
+  }, [activities, habit, identity, name]);
 
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
@@ -106,6 +149,20 @@ export default function Home() {
     go("activity");
   }
 
+  function saveInventory() {
+    setActivities((items) => [
+      {
+        id: Date.now(),
+        title: "Daily inventory",
+        subtitle: journal.trim() || `${mood} day, urge level ${dailyUrge}/10`,
+        value: mood,
+      },
+      ...items,
+    ]);
+    setJournal("");
+    go("activity");
+  }
+
   return (
     <main className="min-h-screen bg-[#fffdf3] text-[#1f2b1d]">
       <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col overflow-hidden bg-[#fffdf3]">
@@ -127,6 +184,7 @@ export default function Home() {
               {menuOpen && (
                 <div className="absolute right-0 top-12 w-48 rounded-3xl border border-[#e5eadb] bg-white p-2 shadow-xl shadow-emerald-900/10">
                   <MenuButton onClick={() => go("profile")}>Profile</MenuButton>
+                  <MenuButton onClick={() => go("inventory")}>Daily inventory</MenuButton>
                   <MenuButton onClick={() => go("activity")}>Activity</MenuButton>
                   <MenuButton onClick={() => go("home")}>Home</MenuButton>
                   <MenuButton onClick={() => go("profile")}>Privacy lock</MenuButton>
@@ -170,7 +228,7 @@ export default function Home() {
                   title="Daily inventory"
                   subtitle={identity}
                   action="Open"
-                  onClick={() => go("activity")}
+                  onClick={() => go("inventory")}
                 />
                 <ListCard
                   title="Chance of relapse"
@@ -314,6 +372,55 @@ export default function Home() {
             </Screen>
           )}
 
+          {screen === "inventory" && (
+            <Screen title="Daily inventory" subtitle="A short private check-in.">
+              <Question title="Mood">
+                {moods.map((item) => (
+                  <Chip
+                    key={item}
+                    active={mood === item}
+                    onClick={() => setMood(item)}
+                  >
+                    {item}
+                  </Chip>
+                ))}
+              </Question>
+
+              <div className="mt-3 rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+                  Urges today: {dailyUrge}/10
+                </p>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={dailyUrge}
+                  onChange={(event) => setDailyUrge(Number(event.target.value))}
+                  className="mt-4 w-full accent-[#58a968]"
+                />
+              </div>
+
+              <div className="mt-3 rounded-[1.6rem] bg-white p-4 shadow-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#89937f]">
+                  Note
+                </p>
+                <textarea
+                  value={journal}
+                  onChange={(event) => setJournal(event.target.value)}
+                  placeholder="What helped today?"
+                  className="mt-3 min-h-24 w-full resize-none rounded-2xl bg-[#f2f3e9] px-4 py-3 text-sm font-bold outline-none placeholder:text-[#9aa291]"
+                />
+              </div>
+
+              <button
+                onClick={saveInventory}
+                className="mt-4 w-full rounded-[1.6rem] bg-[#2b3328] py-4 text-sm font-black uppercase tracking-[0.08em] text-[#f6ffd9]"
+              >
+                Save inventory
+              </button>
+            </Screen>
+          )}
+
           {screen === "activity" && (
             <Screen title="Activity" subtitle="Private logs for your account.">
               <div className="space-y-3">
@@ -373,7 +480,11 @@ export default function Home() {
           <nav className="grid grid-cols-4 gap-1">
             <Tab label="Home" active={screen === "home"} onClick={() => go("home")} />
             <Tab label="Reset" active={["reset", "timer", "reflect"].includes(screen)} onClick={() => go("reset")} />
-            <Tab label="Log" active={screen === "activity"} onClick={() => go("activity")} />
+            <Tab
+              label="Log"
+              active={["activity", "inventory"].includes(screen)}
+              onClick={() => go("activity")}
+            />
             <Tab label="Me" active={screen === "profile"} onClick={() => go("profile")} />
           </nav>
         </footer>
