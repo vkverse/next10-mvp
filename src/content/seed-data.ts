@@ -1,0 +1,73 @@
+import type { SupportCategory, Task } from "@/types/models";
+
+export const seedTasks: Task[] = [
+  {
+    id: 1,
+    title: "Morning routine",
+    time: "6:00 AM",
+    end: "7:00 AM",
+    category: "Personal",
+    color: "mint",
+    done: true,
+    description: "Start slowly and set an intention for the day.",
+  },
+  {
+    id: 2,
+    title: "Deep work session",
+    time: "9:00 AM",
+    end: "11:00 AM",
+    category: "Work",
+    color: "violet",
+    done: false,
+    description: "Finish the first pass of the product experience.",
+  },
+  {
+    id: 3,
+    title: "Team meeting",
+    time: "11:30 AM",
+    end: "12:30 PM",
+    category: "Work",
+    color: "blue",
+    done: false,
+    description: "Weekly product and design alignment.",
+  },
+  {
+    id: 4,
+    title: "Project design",
+    time: "2:00 PM",
+    end: "4:00 PM",
+    category: "Work",
+    color: "peach",
+    done: false,
+    description: "Refine the dashboard and recovery flow.",
+  },
+  {
+    id: 5,
+    title: "Gym workout",
+    time: "6:00 PM",
+    end: "7:00 PM",
+    category: "Wellness",
+    color: "mint",
+    done: false,
+    description: "Strength and mobility session.",
+  },
+  {
+    id: 6,
+    title: "English practice",
+    time: "8:30 PM",
+    end: "9:15 PM",
+    category: "Learning",
+    color: "rose",
+    done: false,
+    description: "Practice speaking for 30 minutes.",
+  },
+];
+
+export const supportCategories: SupportCategory[] = [
+  "Want to Smoke",
+  "Procrastination",
+  "Urge / Habit",
+  "Distracted",
+  "Feeling Low",
+  "Other",
+];

@@ -1,69 +1,761 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { seedTasks } from "@/content/seed-data";
+import { CoachScreen } from "@/features/support/coach-screen";
+import { StruggleModal } from "@/features/support/struggle-modal";
+import type { Reset, Screen, Task } from "@/types/models";
 
-type Screen = "home"|"calendar"|"task"|"focus"|"pause"|"insights"|"goals"|"coach"|"profile";
-type Task = {id:number;title:string;time:string;end:string;category:string;color:string;done:boolean;description:string};
-type Reset = {kind:string;result:string};
-
-const seed: Task[] = [
- {id:1,title:"Morning routine",time:"6:00 AM",end:"7:00 AM",category:"Personal",color:"mint",done:true,description:"Start slowly and set an intention for the day."},
- {id:2,title:"Deep work session",time:"9:00 AM",end:"11:00 AM",category:"Work",color:"violet",done:false,description:"Finish the first pass of the product experience."},
- {id:3,title:"Team meeting",time:"11:30 AM",end:"12:30 PM",category:"Work",color:"blue",done:false,description:"Weekly product and design alignment."},
- {id:4,title:"Project design",time:"2:00 PM",end:"4:00 PM",category:"Work",color:"peach",done:false,description:"Refine the dashboard and recovery flow."},
- {id:5,title:"Gym workout",time:"6:00 PM",end:"7:00 PM",category:"Wellness",color:"mint",done:false,description:"Strength and mobility session."},
- {id:6,title:"English practice",time:"8:30 PM",end:"9:15 PM",category:"Learning",color:"rose",done:false,description:"Practice speaking for 30 minutes."},
-];
-const choices=[["⌛","Procrastinating"],["▣","Distracted"],["〰","Overwhelmed"],["☁","Low energy"],["?","Not sure where to start"],["•••","Other"]];
-const advice:Record<string,string>={Procrastinating:"Reduce the task to one small step",Distracted:"Start a five-minute focus session",Overwhelmed:"Take a two-minute reset","Low energy":"Drink water and take a short walk","Not sure where to start":"Define the smallest visible next action",Other:"Take a short breathing pause"};
-
-export default function FocusFlowApp(){
- const [screen,setScreen]=useState<Screen>("home"),[tasks,setTasks]=useState(seed),[taskId,setTaskId]=useState(2);
- const [modal,setModal]=useState<"add"|"stuck"|null>(null),[step,setStep]=useState(0),[kind,setKind]=useState("Procrastinating"),[resets,setResets]=useState<Reset[]>([]),[ready,setReady]=useState(false);
- useEffect(()=>{try{const raw=localStorage.getItem("focusflow-mvp");if(raw){const x=JSON.parse(raw);if(x.tasks)setTasks(x.tasks);if(x.resets)setResets(x.resets)}}finally{setReady(true)}},[]);
- useEffect(()=>{if(ready)localStorage.setItem("focusflow-mvp",JSON.stringify({tasks,resets}))},[tasks,resets,ready]);
- const task=tasks.find(x=>x.id===taskId)||tasks[0],done=tasks.filter(x=>x.done).length,score=Math.round(66+(done/tasks.length)*24);
- const go=(s:Screen)=>{setScreen(s);setModal(null);window.scrollTo({top:0,behavior:"smooth"})};
- const openTask=(id:number)=>{setTaskId(id);go("task")};
- return <main className={"app-root "+(["calendar","insights","goals"].includes(screen)?"light-mode":"")}>
-  <div className="ambient a1"/><div className="ambient a2"/>
-  <aside className="sidebar"><Brand/><nav>{([["⌂","Dashboard","home"],["□","Calendar","calendar"],["✓","Tasks","task"],["◈","Insights","insights"],["◎","Goals","goals"],["✦","AI Coach","coach"]] as [string,string,Screen][]).map(x=><button key={x[2]} className={screen===x[2]?"active":""} onClick={()=>go(x[2])}><i>{x[0]}</i>{x[1]}</button>)}</nav><button className="side-user" onClick={()=>go("profile")}><Avatar/><span><b>Arjun</b><small>FocusFlow member</small></span></button></aside>
-  <div className="app-frame"><header className="mobile-head"><Brand/><button>♢</button></header><section className="content">
-   {screen==="home"&&<Home score={score} tasks={tasks} done={done} resets={resets} openTask={openTask} go={go} add={()=>setModal("add")} stuck={()=>setModal("stuck")}/>}
-   {screen==="calendar"&&<Calendar tasks={tasks} openTask={openTask} add={()=>setModal("add")}/>}
-   {screen==="task"&&<TaskPage task={task} toggle={()=>setTasks(v=>v.map(x=>x.id===task.id?{...x,done:!x.done}:x))} focus={()=>go("focus")} stuck={()=>setModal("stuck")}/>}
-   {screen==="focus"&&<Timer mode="focus" title={task.title} close={()=>go("home")} stuck={()=>setModal("stuck")}/>}
-   {screen==="pause"&&<Timer mode="pause" title="Give yourself a little room" close={()=>go("home")} stuck={()=>setModal("stuck")}/>}
-   {screen==="insights"&&<Insights resets={resets} done={done}/>}
-   {screen==="goals"&&<Goals/>}{screen==="coach"&&<Coach task={task.title}/>}
-   {screen==="profile"&&<Profile clear={()=>{localStorage.removeItem("focusflow-mvp");setTasks(seed);setResets([])}}/>}
-  </section><Bottom screen={screen} go={go} add={()=>setModal("add")}/></div>
-  {modal==="add"&&<Add close={()=>setModal(null)} save={t=>{setTasks(v=>[...v,t]);setModal(null)}} focus={()=>go("focus")} pause={()=>go("pause")} stuck={()=>setModal("stuck")}/>}
-  {modal==="stuck"&&<div className="overlay" onMouseDown={e=>e.target===e.currentTarget&&(setModal(null),setStep(0))}><section className="stuck-modal" role="dialog" aria-modal="true"><button className="close" onClick={()=>{setModal(null);setStep(0)}}>×</button>
-   {step===0&&<><span className="modal-kicker">IN THE MOMENT</span><h2>I’m Struggling</h2><p>What’s happening right now?</p><div className="choice-grid">{choices.map(([i,l])=><button key={l} onClick={()=>{setKind(l);setStep(1)}}><i data-kind={l}>{i}</i><span>{l}</span></button>)}</div><section className="recent-patterns"><header><h3>Recent Patterns</h3><button onClick={()=>setStep(1)}>View all</button></header>{[["♜","After a long meeting","Today, 4:15 PM"],["✦","Late afternoon","Yesterday, 3:40 PM"],["◉","Before deep work","Monday, 9:05 AM"]].map(([i,l,t])=><button key={l} onClick={()=>{setKind("Distracted");setStep(1)}}><i>{i}</i><span><b>{l}</b><small>A moment you recovered from</small></span><time>{t}</time></button>)}</section><div className="private">⌾ Private by default. This stays on your device.</div></>}
-   {step===1&&<><span className="eyebrow">{kind}</span><h2>Try this next</h2><div className="recommend"><div className="orb"/><small>Recommended</small><h3>{advice[kind]}</h3><p>Make the next move easy enough to begin.</p></div><button className="primary" onClick={()=>setStep(2)}>I’ve tried this</button><button className="text" onClick={()=>setStep(0)}>Choose something else</button></>}
-   {step===2&&<><span className="eyebrow">Quick reflection</span><h2>Did this help you return?</h2><p>No judgment—this helps find what works for you.</p><div className="results">{["Yes, I’m back","Partly","Not yet"].map(r=><button key={r} onClick={()=>{setResets(v=>[{kind,result:r},...v]);setModal(null);setStep(0)}}>{r}<span>→</span></button>)}</div></>}
-  </section></div>}
- </main>
+export default function FocusFlowApp() {
+  const [screen, setScreen] = useState<Screen>("home"),
+    [tasks, setTasks] = useState(seedTasks),
+    [taskId, setTaskId] = useState(2);
+  const [modal, setModal] = useState<"add" | "stuck" | null>(null),
+    [resets, setResets] = useState<Reset[]>([]),
+    [ready, setReady] = useState(false);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("focusflow-mvp");
+      if (raw) {
+        const x = JSON.parse(raw);
+        if (x.tasks) setTasks(x.tasks);
+        if (x.resets) setResets(x.resets);
+      }
+    } finally {
+      setReady(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (ready) localStorage.setItem("focusflow-mvp", JSON.stringify({ tasks, resets }));
+  }, [tasks, resets, ready]);
+  const task = tasks.find((x) => x.id === taskId) || tasks[0],
+    done = tasks.filter((x) => x.done).length,
+    score = Math.round(66 + (done / tasks.length) * 24);
+  const go = (s: Screen) => {
+    setScreen(s);
+    setModal(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const openTask = (id: number) => {
+    setTaskId(id);
+    go("task");
+  };
+  return (
+    <main
+      className={
+        "app-root " + (["calendar", "insights", "goals"].includes(screen) ? "light-mode" : "")
+      }
+    >
+      <div className="ambient a1" />
+      <div className="ambient a2" />
+      <aside className="sidebar">
+        <Brand />
+        <nav>
+          {(
+            [
+              ["⌂", "Dashboard", "home"],
+              ["□", "Calendar", "calendar"],
+              ["✓", "Tasks", "task"],
+              ["◈", "Insights", "insights"],
+              ["◎", "Goals", "goals"],
+              ["✦", "AI Coach", "coach"],
+            ] as [string, string, Screen][]
+          ).map((x) => (
+            <button key={x[2]} className={screen === x[2] ? "active" : ""} onClick={() => go(x[2])}>
+              <i>{x[0]}</i>
+              {x[1]}
+            </button>
+          ))}
+        </nav>
+        <button className="side-user" onClick={() => go("profile")}>
+          <Avatar />
+          <span>
+            <b>Arjun</b>
+            <small>FocusFlow member</small>
+          </span>
+        </button>
+      </aside>
+      <div className="app-frame">
+        <header className="mobile-head">
+          <Brand />
+          <button>♢</button>
+        </header>
+        <section className="content">
+          {screen === "home" && (
+            <Home
+              score={score}
+              tasks={tasks}
+              done={done}
+              resets={resets}
+              openTask={openTask}
+              go={go}
+              add={() => setModal("add")}
+              stuck={() => setModal("stuck")}
+            />
+          )}
+          {screen === "calendar" && (
+            <Calendar tasks={tasks} openTask={openTask} add={() => setModal("add")} />
+          )}
+          {screen === "task" && (
+            <TaskPage
+              task={task}
+              toggle={() =>
+                setTasks((v) => v.map((x) => (x.id === task.id ? { ...x, done: !x.done } : x)))
+              }
+              focus={() => go("focus")}
+              stuck={() => setModal("stuck")}
+            />
+          )}
+          {screen === "focus" && (
+            <Timer
+              mode="focus"
+              title={task.title}
+              close={() => go("home")}
+              stuck={() => setModal("stuck")}
+            />
+          )}
+          {screen === "pause" && (
+            <Timer
+              mode="pause"
+              title="Give yourself a little room"
+              close={() => go("home")}
+              stuck={() => setModal("stuck")}
+            />
+          )}
+          {screen === "insights" && <Insights resets={resets} done={done} />}
+          {screen === "goals" && <Goals />}
+          {screen === "coach" && <CoachScreen />}
+          {screen === "profile" && (
+            <Profile
+              clear={() => {
+                localStorage.removeItem("focusflow-mvp");
+                setTasks(seedTasks);
+                setResets([]);
+              }}
+            />
+          )}
+        </section>
+        <Bottom screen={screen} go={go} add={() => setModal("add")} />
+      </div>
+      {modal === "add" && (
+        <Add
+          close={() => setModal(null)}
+          save={(t) => {
+            setTasks((v) => [...v, t]);
+            setModal(null);
+          }}
+          focus={() => go("focus")}
+          pause={() => go("pause")}
+          stuck={() => setModal("stuck")}
+        />
+      )}
+      {modal === "stuck" && (
+        <StruggleModal
+          onClose={() => setModal(null)}
+          onComplete={(reset) => {
+            setResets((v) => [reset, ...v]);
+            setModal(null);
+          }}
+        />
+      )}
+    </main>
+  );
 }
 
-function Brand(){return <div className="brand"><span>F</span><b>FocusFlow</b></div>} function Avatar(){return <span className="avatar">A</span>}
-function Head({kicker,title,sub}:{kicker:string;title:string;sub:string}){return <header className="page-head"><div><span className="eyebrow">{kicker}</span><h1>{title}</h1><p>{sub}</p></div><div className="head-user"><button>♢</button><Avatar/></div></header>}
-function PanelHead({title,action,click}:{title:string;action?:string;click?:()=>void}){return <header className="panel-head"><h2>{title}</h2>{action&&<button onClick={click}>{action}</button>}</header>}
-function Home({score,tasks,done,resets,openTask,go,add,stuck}:{score:number;tasks:Task[];done:number;resets:Reset[];openTask:(n:number)=>void;go:(s:Screen)=>void;add:()=>void;stuck:()=>void}){
- return <div><Head kicker="Good morning, Arjun ✦" title="Here’s your day." sub="Friday, September 4"/>
- <section className="hero"><div className="score" style={{"--score":score*3.6+"deg"} as React.CSSProperties}><div><b>{score}</b><span>Focused</span></div></div><div className="hero-copy"><span className="eyebrow">Today’s focus</span><h2>You’re building a focused day.</h2><p>Based on completed priorities, focus sessions and successful resets.</p><button onClick={()=>go("insights")}>How this is calculated →</button></div><div className="stats"><div><b>{tasks.length}</b><span>Tasks</span></div><div><b>{done}</b><span>Completed</span></div><div><b>2</b><span>Focus sessions</span></div></div></section>
- <div className="dash-grid"><section className="panel"><PanelHead title="Top priorities" action="+ Add" click={add}/>{tasks.slice(1,4).map(t=><button className="task-row" key={t.id} onClick={()=>openTask(t.id)}><i className={t.color}/><span><b>{t.title}</b><small>{t.category}</small></span><time>{t.time}</time><em>›</em></button>)}<button className="stuck-cta" onClick={stuck}><i>⚡</i><span><b>I’m stuck</b><small>Get help returning to this moment</small></span><em>→</em></button></section>
- <section className="panel"><PanelHead title="Today’s schedule" action="View all" click={()=>go("calendar")}/>{tasks.slice(1,4).map(t=><button className="schedule-row" key={t.id} onClick={()=>openTask(t.id)}><time>{t.time}</time><span className={t.color}><b>{t.title}</b><small>{t.end}</small></span></button>)}</section>
- <section className="panel"><PanelHead title="Quick actions"/><div className="quick-grid">{[["＋","Add task",add],["◎","Focus",()=>go("focus")],["◌","Take a pause",()=>go("pause")],["✦","AI coach",()=>go("coach")]].map(([i,l,f])=><button key={String(l)} onClick={f as ()=>void}><i>{i as string}</i><span>{l as string}</span></button>)}</div></section>
- <section className="panel weekly"><PanelHead title="Weekly rhythm" action="Insights" click={()=>go("insights")}/><div className="mini-chart">{[42,65,50,78,69,88,76].map((n,i)=><i key={i} style={{height:n+"%"}}/>)}</div><p><b>{resets.length||3} resets</b> helped protect your attention this week.</p></section></div></div>
+function Brand() {
+  return (
+    <div className="brand">
+      <span>F</span>
+      <b>FocusFlow</b>
+    </div>
+  );
 }
-function Calendar({tasks,openTask,add}:{tasks:Task[];openTask:(n:number)=>void;add:()=>void}){return <div className="light-page"><Head kicker="Your plan" title="September 2026" sub="Make space for what matters."/><div className="week">{[["SUN","30"],["MON","31"],["TUE","1"],["WED","2"],["THU","3"],["FRI","4"],["SAT","5"]].map(x=><button className={x[1]==="4"?"active":""} key={x[0]}><small>{x[0]}</small><b>{x[1]}</b></button>)}</div><section className="timeline"><div className="axis">{["6 AM","8 AM","10 AM","12 PM","2 PM","4 PM","6 PM","8 PM"].map(x=><span key={x}>{x}</span>)}</div><div className="blocks">{tasks.map((t,i)=><button key={t.id} className={"time-block "+t.color} style={{top:(i*76+6)+"px",height:(i===1||i===3?88:60)+"px"}} onClick={()=>openTask(t.id)}><b>{t.title}</b><small>{t.time} – {t.end}</small></button>)}<div className="now"><span>Now</span></div></div></section><button className="fab" onClick={add}>+</button></div>}
-function TaskPage({task,toggle,focus,stuck}:{task:Task;toggle:()=>void;focus:()=>void;stuck:()=>void}){return <div className="detail"><span className="eyebrow">{task.category}</span><h1>{task.title}</h1><p className="lead">{task.description}</p><div className="pills"><span>□ Sep 4, 2026</span><span>◷ {task.time} – {task.end}</span></div><section className="detail-card">{[["Priority","High"],["Reminder","15 min before"],["Repeat","Every weekday"]].map(x=><div className="detail-row" key={x[0]}><span>{x[0]}</span><b>{x[1]}</b><i>›</i></div>)}</section><section className="detail-card"><PanelHead title="Checklist" action="1 / 4"/>{["Research & wireframe","Design UI","Prototype interactions","Review"].map((x,i)=><label className="check" key={x}><input type="checkbox" defaultChecked={i===0}/><span>{x}</span></label>)}</section><section className="detail-card note"><span className="eyebrow">Notes</span><p>Focus on clean hierarchy and calm micro-interactions. Finish one useful layer at a time.</p></section><button className="primary" onClick={focus}>◎ Start focus session</button><button className="secondary" onClick={stuck}>⚡ I’m stuck</button><button className="text" onClick={toggle}>{task.done?"Mark as incomplete":"Mark as complete"}</button></div>}
-function Timer({mode,title,close,stuck}:{mode:"focus"|"pause";title:string;close:()=>void;stuck:()=>void}){const presets=mode==="focus"?[25,45,60]:[2,5,10],[duration,setDuration]=useState(presets[0]),[secs,setSecs]=useState(duration*60),[running,setRunning]=useState(false);useEffect(()=>{if(!running||secs<=0)return;const id=setInterval(()=>setSecs(x=>x-1),1000);return()=>clearInterval(id)},[running,secs]);function selectDuration(value:number){setDuration(value);setSecs(value*60);setRunning(false)}const progress=1-secs/(duration*60),m=Math.floor(secs/60).toString().padStart(2,"0"),s=(secs%60).toString().padStart(2,"0");return <div className="timer-page"><button className="close fixed" onClick={close}>×</button><span className="eyebrow">{mode==="focus"?"Focus mode":"Take a pause"}</span><h1>{mode==="focus"?"Protect this moment":"A little room to reset"}</h1><p>{title}</p><div className="cosmos"><div className="timer-ring" style={{"--progress":progress*360+"deg"} as React.CSSProperties}><div><b>{m}:{s}</b><span>{running?"In progress":"Ready when you are"}</span></div></div></div><div className="presets">{presets.map(x=><button className={x===duration?"active":""} key={x} onClick={()=>selectDuration(x)}>{x} min</button>)}</div><button className="primary" onClick={()=>setRunning(x=>!x)}>{running?"Pause":"Start "+(mode==="focus"?"focus session":"timer")}</button>{mode==="focus"&&<button className="secondary" onClick={stuck}>⚡ I’m stuck</button>}{mode==="pause"&&<div className="instead"><span className="eyebrow">Try this while you pause</span>{["Drink some water","Take a short walk","Breathe slowly"].map(x=><div key={x}>○ {x}</div>)}</div>}</div>}
-function Insights({resets,done}:{resets:Reset[];done:number}){const rate=resets.length?Math.round(resets.filter(x=>x.result.startsWith("Yes")).length/resets.length*100):68;return <div className="light-page"><Head kicker="Patterns, not pressure" title="Insights" sub="See what helps you work with more intention."/><section className="metric wide"><PanelHead title="Productivity trend" action="+23%"/><p>You created more focused time than last week.</p><svg viewBox="0 0 600 160"><path className="area" d="M0 130 C70 110 90 130 145 90 S230 120 285 70 S360 95 415 48 S500 72 600 20 L600 160 L0 160Z"/><path className="line" d="M0 130 C70 110 90 130 145 90 S230 120 285 70 S360 95 415 48 S500 72 600 20"/></svg></section><div className="metric-grid"><section className="metric"><span className="eyebrow">Focus time</span><h2>22h 30m</h2><div className="bars">{[60,35,88,65,58,50,80].map((x,i)=><i style={{height:x+"%"}} key={i}/>)}</div></section><section className="metric"><span className="eyebrow">Return-to-task</span><h2>{rate}%</h2><div className="donut"><span>{resets.length||6}<small>resets</small></span></div></section><section className="metric"><span className="eyebrow">Completed</span><h2>{done} tasks</h2><p>Completed tasks from your local plan.</p></section><section className="metric"><span className="eyebrow">Most helpful</span><h2>Small next step</h2><p>Based only on saved reset results.</p></section></div></div>}
-function Goals(){const [done,setDone]=useState([true,false,false]);return <div className="light-page"><Head kicker="Keep it meaningful" title="Goals & habits" sub="Three priorities are enough."/><section className="goal-card">{[["Build a successful product",78],["Speak fluent English",65],["Financial freedom",30]].map(x=><div className="goal" key={String(x[0])}><div><b>{x[0]}</b><span>{x[1]}%</span></div><progress max="100" value={Number(x[1])}/></div>)}</section><h2 className="section-title">Today’s habits</h2><section className="goal-card">{["Morning exercise","Read 20 pages","English practice"].map((x,i)=><button className="habit" key={x} onClick={()=>setDone(v=>v.map((a,j)=>i===j?!a:a))}><span className={done[i]?"checked":""}>{done[i]?"✓":""}</span><b>{x}</b><small>{[12,8,15][i]} day rhythm</small></button>)}</section><p className="kind-note">Missing a day is information, not failure. Continue when you are ready.</p></div>}
-function Coach({task}:{task:string}){const [messages,setMessages]=useState(["You planned a deep-work block today. Want help making the first step smaller?"]),[text,setText]=useState("");function send(e:FormEvent){e.preventDefault();if(!text.trim())return;setMessages(v=>[...v,text,"For “"+task+"”, open the working file and make one imperfect change. Then decide whether to continue for five minutes."]);setText("")}return <div className="coach"><div className="coach-head"><div className="orb"/><span className="eyebrow">AI productivity guide</span><h1>Let’s make the next step lighter.</h1><p>Suggestions come from a bounded productivity playbook—not medical advice.</p></div><div className="chat">{messages.map((x,i)=><div className={i%2?"bubble user":"bubble"} key={i}>{x}{i%2===0&&<small>AI generated</small>}</div>)}</div><div className="suggestions">{["Break down my task","Suggest a focus time","Help me replan"].map(x=><button key={x} onClick={()=>setText(x)}>{x}</button>)}</div><form className="chat-form" onSubmit={send}><input value={text} onChange={e=>setText(e.target.value)} placeholder="Ask for productivity help…"/><button>↑</button></form></div>}
-function Profile({clear}:{clear:()=>void}){return <div className="profile"><div className="profile-hero"><Avatar/><h1>Arjun</h1><p>Building one focused day at a time.</p></div><section className="settings"><PanelHead title="Preferences"/>{[["Notifications","On"],["Default focus","25 minutes"],["Calendar connection","Coming soon"]].map(x=><div className="setting" key={x[0]}><span><b>{x[0]}</b><small>{x[1]}</small></span><i>›</i></div>)}<label className="setting"><span><b>Reduced motion</b><small>Use calmer transitions</small></span><input type="checkbox"/></label></section><section className="settings"><PanelHead title="Privacy & data"/><p>Your MVP data stays locally in this browser. No advertising trackers or external AI calls are used.</p><button className="setting action">Export my data <span>→</span></button><button className="setting action danger" onClick={clear}>Clear local history <span>→</span></button></section></div>}
-function Add({close,save,focus,pause,stuck}:{close:()=>void;save:(t:Task)=>void;focus:()=>void;pause:()=>void;stuck:()=>void}){const [title,setTitle]=useState("");function submit(e:FormEvent){e.preventDefault();if(title.trim())save({id:Date.now(),title,time:"4:30 PM",end:"5:00 PM",category:"Personal",color:"violet",done:false,description:"A task added to today’s plan."})}return <div className="overlay"><section className="add-sheet"><button className="close" onClick={close}>×</button><span className="eyebrow">Quick add</span><h2>What would help now?</h2><form onSubmit={submit}><input autoFocus value={title} onChange={e=>setTitle(e.target.value)} placeholder="Add a task…"/><button className="primary">Add to today</button></form><div className="sheet-actions"><button onClick={focus}>◎<span>Focus session</span></button><button onClick={stuck}>⚡<span>I’m stuck</span></button><button onClick={pause}>◌<span>Take a pause</span></button></div></section></div>}
-function Bottom({screen,go,add}:{screen:Screen;go:(s:Screen)=>void;add:()=>void}){return <nav className="bottom">{([["⌂","Home","home"],["□","Calendar","calendar"]] as [string,string,Screen][]).map(x=><button className={screen===x[2]?"active":""} key={x[2]} onClick={()=>go(x[2])}><i>{x[0]}</i><span>{x[1]}</span></button>)}<button className="nav-add" onClick={add}>＋</button>{([["◈","Insights","insights"],["♙","Profile","profile"]] as [string,string,Screen][]).map(x=><button className={screen===x[2]?"active":""} key={x[2]} onClick={()=>go(x[2])}><i>{x[0]}</i><span>{x[1]}</span></button>)}</nav>}
+function Avatar() {
+  return <span className="avatar">A</span>;
+}
+function Head({ kicker, title, sub }: { kicker: string; title: string; sub: string }) {
+  return (
+    <header className="page-head">
+      <div>
+        <span className="eyebrow">{kicker}</span>
+        <h1>{title}</h1>
+        <p>{sub}</p>
+      </div>
+      <div className="head-user">
+        <button>♢</button>
+        <Avatar />
+      </div>
+    </header>
+  );
+}
+function PanelHead({
+  title,
+  action,
+  click,
+}: {
+  title: string;
+  action?: string;
+  click?: () => void;
+}) {
+  return (
+    <header className="panel-head">
+      <h2>{title}</h2>
+      {action && <button onClick={click}>{action}</button>}
+    </header>
+  );
+}
+function Home({
+  score,
+  tasks,
+  done,
+  resets,
+  openTask,
+  go,
+  add,
+  stuck,
+}: {
+  score: number;
+  tasks: Task[];
+  done: number;
+  resets: Reset[];
+  openTask: (n: number) => void;
+  go: (s: Screen) => void;
+  add: () => void;
+  stuck: () => void;
+}) {
+  return (
+    <div>
+      <Head kicker="Good morning, Arjun ✦" title="Here’s your day." sub="Friday, September 4" />
+      <section className="hero">
+        <div className="score" style={{ "--score": score * 3.6 + "deg" } as React.CSSProperties}>
+          <div>
+            <b>{score}</b>
+            <span>Focused</span>
+          </div>
+        </div>
+        <div className="hero-copy">
+          <span className="eyebrow">Today’s focus</span>
+          <h2>You’re building a focused day.</h2>
+          <p>Based on completed priorities, focus sessions and successful resets.</p>
+          <button onClick={() => go("insights")}>How this is calculated →</button>
+        </div>
+        <div className="stats">
+          <div>
+            <b>{tasks.length}</b>
+            <span>Tasks</span>
+          </div>
+          <div>
+            <b>{done}</b>
+            <span>Completed</span>
+          </div>
+          <div>
+            <b>2</b>
+            <span>Focus sessions</span>
+          </div>
+        </div>
+      </section>
+      <div className="dash-grid">
+        <section className="panel">
+          <PanelHead title="Top priorities" action="+ Add" click={add} />
+          {tasks.slice(1, 4).map((t) => (
+            <button className="task-row" key={t.id} onClick={() => openTask(t.id)}>
+              <i className={t.color} />
+              <span>
+                <b>{t.title}</b>
+                <small>{t.category}</small>
+              </span>
+              <time>{t.time}</time>
+              <em>›</em>
+            </button>
+          ))}
+          <button className="stuck-cta" onClick={stuck}>
+            <i>⚡</i>
+            <span>
+              <b>I’m stuck</b>
+              <small>Get help returning to this moment</small>
+            </span>
+            <em>→</em>
+          </button>
+        </section>
+        <section className="panel">
+          <PanelHead title="Today’s schedule" action="View all" click={() => go("calendar")} />
+          {tasks.slice(1, 4).map((t) => (
+            <button className="schedule-row" key={t.id} onClick={() => openTask(t.id)}>
+              <time>{t.time}</time>
+              <span className={t.color}>
+                <b>{t.title}</b>
+                <small>{t.end}</small>
+              </span>
+            </button>
+          ))}
+        </section>
+        <section className="panel">
+          <PanelHead title="Quick actions" />
+          <div className="quick-grid">
+            {[
+              ["＋", "Add task", add],
+              ["◎", "Focus", () => go("focus")],
+              ["◌", "Take a pause", () => go("pause")],
+              ["✦", "AI coach", () => go("coach")],
+            ].map(([i, l, f]) => (
+              <button key={String(l)} onClick={f as () => void}>
+                <i>{i as string}</i>
+                <span>{l as string}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+        <section className="panel weekly">
+          <PanelHead title="Weekly rhythm" action="Insights" click={() => go("insights")} />
+          <div className="mini-chart">
+            {[42, 65, 50, 78, 69, 88, 76].map((n, i) => (
+              <i key={i} style={{ height: n + "%" }} />
+            ))}
+          </div>
+          <p>
+            <b>{resets.length || 3} resets</b> helped protect your attention this week.
+          </p>
+        </section>
+      </div>
+    </div>
+  );
+}
+function Calendar({
+  tasks,
+  openTask,
+  add,
+}: {
+  tasks: Task[];
+  openTask: (n: number) => void;
+  add: () => void;
+}) {
+  return (
+    <div className="light-page">
+      <Head kicker="Your plan" title="September 2026" sub="Make space for what matters." />
+      <div className="week">
+        {[
+          ["SUN", "30"],
+          ["MON", "31"],
+          ["TUE", "1"],
+          ["WED", "2"],
+          ["THU", "3"],
+          ["FRI", "4"],
+          ["SAT", "5"],
+        ].map((x) => (
+          <button className={x[1] === "4" ? "active" : ""} key={x[0]}>
+            <small>{x[0]}</small>
+            <b>{x[1]}</b>
+          </button>
+        ))}
+      </div>
+      <section className="timeline">
+        <div className="axis">
+          {["6 AM", "8 AM", "10 AM", "12 PM", "2 PM", "4 PM", "6 PM", "8 PM"].map((x) => (
+            <span key={x}>{x}</span>
+          ))}
+        </div>
+        <div className="blocks">
+          {tasks.map((t, i) => (
+            <button
+              key={t.id}
+              className={"time-block " + t.color}
+              style={{ top: i * 76 + 6 + "px", height: (i === 1 || i === 3 ? 88 : 60) + "px" }}
+              onClick={() => openTask(t.id)}
+            >
+              <b>{t.title}</b>
+              <small>
+                {t.time} – {t.end}
+              </small>
+            </button>
+          ))}
+          <div className="now">
+            <span>Now</span>
+          </div>
+        </div>
+      </section>
+      <button className="fab" onClick={add}>
+        +
+      </button>
+    </div>
+  );
+}
+function TaskPage({
+  task,
+  toggle,
+  focus,
+  stuck,
+}: {
+  task: Task;
+  toggle: () => void;
+  focus: () => void;
+  stuck: () => void;
+}) {
+  return (
+    <div className="detail">
+      <span className="eyebrow">{task.category}</span>
+      <h1>{task.title}</h1>
+      <p className="lead">{task.description}</p>
+      <div className="pills">
+        <span>□ Sep 4, 2026</span>
+        <span>
+          ◷ {task.time} – {task.end}
+        </span>
+      </div>
+      <section className="detail-card">
+        {[
+          ["Priority", "High"],
+          ["Reminder", "15 min before"],
+          ["Repeat", "Every weekday"],
+        ].map((x) => (
+          <div className="detail-row" key={x[0]}>
+            <span>{x[0]}</span>
+            <b>{x[1]}</b>
+            <i>›</i>
+          </div>
+        ))}
+      </section>
+      <section className="detail-card">
+        <PanelHead title="Checklist" action="1 / 4" />
+        {["Research & wireframe", "Design UI", "Prototype interactions", "Review"].map((x, i) => (
+          <label className="check" key={x}>
+            <input type="checkbox" defaultChecked={i === 0} />
+            <span>{x}</span>
+          </label>
+        ))}
+      </section>
+      <section className="detail-card note">
+        <span className="eyebrow">Notes</span>
+        <p>
+          Focus on clean hierarchy and calm micro-interactions. Finish one useful layer at a time.
+        </p>
+      </section>
+      <button className="primary" onClick={focus}>
+        ◎ Start focus session
+      </button>
+      <button className="secondary" onClick={stuck}>
+        ⚡ I’m stuck
+      </button>
+      <button className="text" onClick={toggle}>
+        {task.done ? "Mark as incomplete" : "Mark as complete"}
+      </button>
+    </div>
+  );
+}
+function Timer({
+  mode,
+  title,
+  close,
+  stuck,
+}: {
+  mode: "focus" | "pause";
+  title: string;
+  close: () => void;
+  stuck: () => void;
+}) {
+  const presets = mode === "focus" ? [25, 45, 60] : [2, 5, 10],
+    [duration, setDuration] = useState(presets[0]),
+    [secs, setSecs] = useState(duration * 60),
+    [running, setRunning] = useState(false);
+  useEffect(() => {
+    if (!running || secs <= 0) return;
+    const id = setInterval(() => setSecs((x) => x - 1), 1000);
+    return () => clearInterval(id);
+  }, [running, secs]);
+  function selectDuration(value: number) {
+    setDuration(value);
+    setSecs(value * 60);
+    setRunning(false);
+  }
+  const progress = 1 - secs / (duration * 60),
+    m = Math.floor(secs / 60)
+      .toString()
+      .padStart(2, "0"),
+    s = (secs % 60).toString().padStart(2, "0");
+  return (
+    <div className="timer-page">
+      <button className="close fixed" onClick={close}>
+        ×
+      </button>
+      <span className="eyebrow">{mode === "focus" ? "Focus mode" : "Take a pause"}</span>
+      <h1>{mode === "focus" ? "Protect this moment" : "A little room to reset"}</h1>
+      <p>{title}</p>
+      <div className="cosmos">
+        <div
+          className="timer-ring"
+          style={{ "--progress": progress * 360 + "deg" } as React.CSSProperties}
+        >
+          <div>
+            <b>
+              {m}:{s}
+            </b>
+            <span>{running ? "In progress" : "Ready when you are"}</span>
+          </div>
+        </div>
+      </div>
+      <div className="presets">
+        {presets.map((x) => (
+          <button
+            className={x === duration ? "active" : ""}
+            key={x}
+            onClick={() => selectDuration(x)}
+          >
+            {x} min
+          </button>
+        ))}
+      </div>
+      <button className="primary" onClick={() => setRunning((x) => !x)}>
+        {running ? "Pause" : "Start " + (mode === "focus" ? "focus session" : "timer")}
+      </button>
+      {mode === "focus" && (
+        <button className="secondary" onClick={stuck}>
+          ⚡ I’m stuck
+        </button>
+      )}
+      {mode === "pause" && (
+        <div className="instead">
+          <span className="eyebrow">Try this while you pause</span>
+          {["Drink some water", "Take a short walk", "Breathe slowly"].map((x) => (
+            <div key={x}>○ {x}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+function Insights({ resets, done }: { resets: Reset[]; done: number }) {
+  const rate = resets.length
+    ? Math.round((resets.filter((x) => x.result.startsWith("Yes")).length / resets.length) * 100)
+    : 68;
+  return (
+    <div className="light-page">
+      <Head
+        kicker="Patterns, not pressure"
+        title="Insights"
+        sub="See what helps you work with more intention."
+      />
+      <section className="metric wide">
+        <PanelHead title="Productivity trend" action="+23%" />
+        <p>You created more focused time than last week.</p>
+        <svg viewBox="0 0 600 160">
+          <path
+            className="area"
+            d="M0 130 C70 110 90 130 145 90 S230 120 285 70 S360 95 415 48 S500 72 600 20 L600 160 L0 160Z"
+          />
+          <path
+            className="line"
+            d="M0 130 C70 110 90 130 145 90 S230 120 285 70 S360 95 415 48 S500 72 600 20"
+          />
+        </svg>
+      </section>
+      <div className="metric-grid">
+        <section className="metric">
+          <span className="eyebrow">Focus time</span>
+          <h2>22h 30m</h2>
+          <div className="bars">
+            {[60, 35, 88, 65, 58, 50, 80].map((x, i) => (
+              <i style={{ height: x + "%" }} key={i} />
+            ))}
+          </div>
+        </section>
+        <section className="metric">
+          <span className="eyebrow">Return-to-task</span>
+          <h2>{rate}%</h2>
+          <div className="donut">
+            <span>
+              {resets.length || 6}
+              <small>resets</small>
+            </span>
+          </div>
+        </section>
+        <section className="metric">
+          <span className="eyebrow">Completed</span>
+          <h2>{done} tasks</h2>
+          <p>Completed tasks from your local plan.</p>
+        </section>
+        <section className="metric">
+          <span className="eyebrow">Most helpful</span>
+          <h2>Small next step</h2>
+          <p>Based only on saved reset results.</p>
+        </section>
+      </div>
+    </div>
+  );
+}
+function Goals() {
+  const [done, setDone] = useState([true, false, false]);
+  return (
+    <div className="light-page">
+      <Head kicker="Keep it meaningful" title="Goals & habits" sub="Three priorities are enough." />
+      <section className="goal-card">
+        {[
+          ["Build a successful product", 78],
+          ["Speak fluent English", 65],
+          ["Financial freedom", 30],
+        ].map((x) => (
+          <div className="goal" key={String(x[0])}>
+            <div>
+              <b>{x[0]}</b>
+              <span>{x[1]}%</span>
+            </div>
+            <progress max="100" value={Number(x[1])} />
+          </div>
+        ))}
+      </section>
+      <h2 className="section-title">Today’s habits</h2>
+      <section className="goal-card">
+        {["Morning exercise", "Read 20 pages", "English practice"].map((x, i) => (
+          <button
+            className="habit"
+            key={x}
+            onClick={() => setDone((v) => v.map((a, j) => (i === j ? !a : a)))}
+          >
+            <span className={done[i] ? "checked" : ""}>{done[i] ? "✓" : ""}</span>
+            <b>{x}</b>
+            <small>{[12, 8, 15][i]} day rhythm</small>
+          </button>
+        ))}
+      </section>
+      <p className="kind-note">
+        Missing a day is information, not failure. Continue when you are ready.
+      </p>
+    </div>
+  );
+}
+function Profile({ clear }: { clear: () => void }) {
+  return (
+    <div className="profile">
+      <div className="profile-hero">
+        <Avatar />
+        <h1>Arjun</h1>
+        <p>Building one focused day at a time.</p>
+      </div>
+      <section className="settings">
+        <PanelHead title="Preferences" />
+        {[
+          ["Notifications", "On"],
+          ["Default focus", "25 minutes"],
+          ["Calendar connection", "Coming soon"],
+        ].map((x) => (
+          <div className="setting" key={x[0]}>
+            <span>
+              <b>{x[0]}</b>
+              <small>{x[1]}</small>
+            </span>
+            <i>›</i>
+          </div>
+        ))}
+        <label className="setting">
+          <span>
+            <b>Reduced motion</b>
+            <small>Use calmer transitions</small>
+          </span>
+          <input type="checkbox" />
+        </label>
+      </section>
+      <section className="settings">
+        <PanelHead title="Privacy & data" />
+        <p>
+          Your MVP data stays locally in this browser. No advertising trackers or external AI calls
+          are used.
+        </p>
+        <button className="setting action">
+          Export my data <span>→</span>
+        </button>
+        <button className="setting action danger" onClick={clear}>
+          Clear local history <span>→</span>
+        </button>
+      </section>
+    </div>
+  );
+}
+function Add({
+  close,
+  save,
+  focus,
+  pause,
+  stuck,
+}: {
+  close: () => void;
+  save: (t: Task) => void;
+  focus: () => void;
+  pause: () => void;
+  stuck: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (title.trim())
+      save({
+        id: Date.now(),
+        title,
+        time: "4:30 PM",
+        end: "5:00 PM",
+        category: "Personal",
+        color: "violet",
+        done: false,
+        description: "A task added to today’s plan.",
+      });
+  }
+  return (
+    <div className="overlay">
+      <section className="add-sheet">
+        <button className="close" onClick={close}>
+          ×
+        </button>
+        <span className="eyebrow">Quick add</span>
+        <h2>What would help now?</h2>
+        <form onSubmit={submit}>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Add a task…"
+          />
+          <button className="primary">Add to today</button>
+        </form>
+        <div className="sheet-actions">
+          <button onClick={focus}>
+            ◎<span>Focus session</span>
+          </button>
+          <button onClick={stuck}>
+            ⚡<span>I’m stuck</span>
+          </button>
+          <button onClick={pause}>
+            ◌<span>Take a pause</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+function Bottom({ screen, go, add }: { screen: Screen; go: (s: Screen) => void; add: () => void }) {
+  return (
+    <nav className="bottom">
+      {(
+        [
+          ["⌂", "Home", "home"],
+          ["□", "Calendar", "calendar"],
+        ] as [string, string, Screen][]
+      ).map((x) => (
+        <button className={screen === x[2] ? "active" : ""} key={x[2]} onClick={() => go(x[2])}>
+          <i>{x[0]}</i>
+          <span>{x[1]}</span>
+        </button>
+      ))}
+      <button className="nav-add" onClick={add}>
+        ＋
+      </button>
+      {(
+        [
+          ["◈", "Insights", "insights"],
+          ["♙", "Profile", "profile"],
+        ] as [string, string, Screen][]
+      ).map((x) => (
+        <button className={screen === x[2] ? "active" : ""} key={x[2]} onClick={() => go(x[2])}>
+          <i>{x[0]}</i>
+          <span>{x[1]}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}

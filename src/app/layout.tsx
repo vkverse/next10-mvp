@@ -14,15 +14,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "FocusFlow — Plan your day. Get unstuck.",
-  description: "A privacy-first daily focus planner that helps you recover when your day goes off track.",
+  description:
+    "A privacy-first daily focus planner that helps you recover when your day goes off track.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

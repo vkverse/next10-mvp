@@ -15,10 +15,20 @@ Open `http://localhost:3000`. The current verified preview in the Codex workspac
 
 - Next.js 16 App Router and TypeScript
 - Server-rendered page shell with a focused interactive client boundary
+- Domain models are centralized in `src/types`
+- Reviewed product content and demo data live in `src/content` and `public/content`
+- Support flows, local guide, and SVG iconography are isolated in `src/features/support`
+- Browser integration logic is contained in reusable hooks under `src/hooks`
 - Responsive mobile navigation and desktop sidebar
 - Browser-local persistence under `focusflow-mvp`
 - No analytics, external AI calls, authentication, or health-data transmission
-- Deterministic coach responses from a bounded productivity playbook
+- Deterministic coach responses loaded from `public/content/support-library.yaml`
+
+## Content workflow
+
+Support answers are data, not component code. Add or revise entries in the YAML library,
+then run `npm run format` and `npm run build`. Every entry has a category, question,
+reviewed answer, next action, and an optional safety caution.
 
 ## Implemented flows
 

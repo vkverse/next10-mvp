@@ -1,0 +1,99 @@
+version: 1
+description: "Local, reviewed support responses for FocusFlow. No generative AI is used."
+entries:
+  - id: smoke-now
+    category: "Want to Smoke"
+    question: "I want to smoke right now"
+    answer: "An urge can feel urgent without requiring an immediate decision. Create a short pause, move away from the usual smoking place, and choose one simple alternative."
+    action: "Wait ten minutes, drink water, and take a short walk"
+    caution: "FocusFlow is not a cessation treatment. If you want to quit, consider support from a qualified health professional or an evidence-based quit service."
+  - id: smoke-trigger
+    category: "Want to Smoke"
+    question: "What triggered my smoking urge?"
+    answer: "Common patterns include a familiar time, place, social cue, stress, or finishing a meal. Record what happened immediately before the urge without judging yourself."
+    action: "Name the time, place, feeling, and activity"
+    caution: "Seek professional help for persistent or difficult withdrawal symptoms."
+  - id: smoke-slip
+    category: "Want to Smoke"
+    question: "I smoked after trying not to"
+    answer: "One difficult moment does not erase previous effort. Record the trigger, notice what helped even briefly, and make the next helpful choice."
+    action: "Save the trigger and restart from this moment"
+    caution: "This is general support, not medical advice."
+  - id: procrastination-start
+    category: "Procrastination"
+    question: "I cannot start my task"
+    answer: "The task may be too large or unclear. Reduce it until the first action is visible and can be completed in two minutes."
+    action: "Open the task and complete one tiny first step"
+  - id: procrastination-perfect
+    category: "Procrastination"
+    question: "I am waiting until I can do it perfectly"
+    answer: "Create a deliberately rough first version. The goal of the first pass is to make the work editable, not impressive."
+    action: "Work on an intentionally imperfect draft for five minutes"
+  - id: procrastination-deadline
+    category: "Procrastination"
+    question: "The deadline is making me avoid the work"
+    answer: "Separate the next action from the entire deadline. Decide what evidence of progress you can create in the next ten minutes."
+    action: "Start a ten-minute progress block"
+  - id: urge-habit
+    category: "Urge / Habit"
+    question: "I feel pulled toward an unwanted habit"
+    answer: "Pause before acting and change your immediate environment. Notice the urge as a temporary experience rather than an instruction."
+    action: "Move locations and begin a two-minute reset"
+    caution: "For substance use, self-harm, or unsafe behavior, contact an appropriate professional or emergency service."
+  - id: habit-repeat
+    category: "Urge / Habit"
+    question: "I keep repeating the same habit"
+    answer: "Look for the cue that appears immediately before the behavior. Make the alternative easier to access than the old response."
+    action: "Record the cue and prepare one replacement action"
+  - id: distracted-phone
+    category: "Distracted"
+    question: "I keep checking my phone"
+    answer: "Create a small amount of friction. Put the phone beyond arm's reach and decide when you will check it next."
+    action: "Place the phone away and start five minutes of focus"
+  - id: distracted-tabs
+    category: "Distracted"
+    question: "I have too many tabs and tasks open"
+    answer: "Capture unfinished items in one place, close everything unrelated, and leave only the material needed for the current task."
+    action: "Keep one task and one working window visible"
+  - id: distracted-noise
+    category: "Distracted"
+    question: "My environment is distracting"
+    answer: "Reduce one source of noise or movement instead of trying to control everything at once."
+    action: "Change location or use a quieter focus block"
+  - id: low-energy
+    category: "Feeling Low"
+    question: "I feel low and cannot focus"
+    answer: "Lower the demand for this moment. Choose a small, concrete action and allow yourself to stop after it."
+    action: "Drink water, stand up, and complete one small action"
+    caution: "FocusFlow does not assess or treat mental-health conditions."
+  - id: low-day
+    category: "Feeling Low"
+    question: "Today feels difficult"
+    answer: "A lighter plan can still be a valid plan. Protect the most important commitment and intentionally reschedule what can wait."
+    action: "Keep one priority and replan the rest"
+    caution: "If you feel unsafe or may harm yourself, contact local emergency services or a trusted person now."
+  - id: overwhelmed
+    category: "Other"
+    question: "I feel overwhelmed"
+    answer: "Move everything out of your head and choose one item based on importance and immediacy. The remaining items can wait in the plan."
+    action: "Write the list, circle one item, and begin"
+  - id: app-score
+    category: "App Help"
+    question: "How is Today's Focus calculated?"
+    answer: "Today's Focus uses completed planned tasks and saved recovery outcomes. It is a transparent productivity indicator, not an assessment of you."
+    action: "Open Insights to review the underlying activity"
+  - id: app-privacy
+    category: "App Help"
+    question: "Where is my information stored?"
+    answer: "In this MVP, tasks and recovery results are stored in your current browser using local storage. They are not sent to an external AI service."
+    action: "Open Profile to clear local history"
+  - id: app-ai
+    category: "App Help"
+    question: "Does the coach use AI?"
+    answer: "No. The current coach searches this reviewed local response library and returns the closest relevant answer."
+    action: "Ask a productivity or app question"
+  - id: app-focus
+    category: "App Help"
+    question: "How do I start a focus session?"
+    answer: "Open the current task and select Start focus session, or use the Focus shortcut on the dashboard."
+    action: "Choose a duration and press Start"
