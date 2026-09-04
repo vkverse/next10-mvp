@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next10 - Private Reset Coach",
-  description: "A privacy-first habit control app for urges, resets, and reflection.",
+  title: "FocusFlow — Plan your day. Get unstuck.",
+  description: "A privacy-first daily focus planner that helps you recover when your day goes off track.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
